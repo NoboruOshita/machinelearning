@@ -1,7 +1,7 @@
 from django.urls import path
-from . import views
+from . import views, machinelearning
 
 urlpatterns = [
-    # path('',views.home,name='home')
-    path('MachineLearning/', views.MachineLearning, name='MachineLearning'),
+    #path('',views.login,name='login')
+    path('MachineLearning/', machinelearning.MachineLearning, name='MachineLearning'),
 ]
