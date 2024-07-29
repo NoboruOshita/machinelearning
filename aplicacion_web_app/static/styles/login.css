@@ -1,0 +1,58 @@
+
+body, h2{
+    margin:0;
+}
+
+h1{
+    margin: 0 0 .6rem 0;
+}
+
+h2{
+    width: 40%;
+    font-size: 2rem;
+}
+
+p{
+    font-size: 1.2rem;
+}
+
+input{
+    width: 30rem;
+    height: 1.6rem;
+    font-size: 1rem;
+    border-radius: 6px;
+}
+
+button{
+    margin: 1rem 10.7rem 0rem;
+    font-size: 1.2rem;
+    padding: 10px;
+    border: 0;
+    width: 30%;
+}
+ 
+.main-container{
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+.left-container{
+    background-color: #E9E8E9;
+    padding: 18.94rem 7rem;
+}
+
+.right-container{
+    background-color: #FAFAFA;
+    padding: 15.10rem 8rem;
+}
+
+.login-form{
+    display: flex;
+    flex-direction: column;
+}
+
+.register-prompt{
+    margin-bottom: 0;
+}
+

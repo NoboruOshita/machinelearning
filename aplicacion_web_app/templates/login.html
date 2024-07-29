@@ -1,30 +1,28 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>RANSOMGUARD</title>
+    <link rel="stylesheet" href="{% static 'styles/login.css' %}">
 </head>
 <body>
     <div class="main-container">
         <div class="left-container">
-            <div class="header">
-                <h1>RANSOMGUARD</h1>
+                <h1 style="font-size: 4rem;">RANSOMGUARD</h1>
                 <h2>Ransomware Detection Application</h2>
-            </div>
         </div>
         <div class="right-container">
-            <div class="login-section">
-                <h1>Log In</h1>
-                <div class="form-container">
-                    <form action="" class="login-form">
-                        <p>Usuario</p>
-                        <input type="text" name="username" id="username" placeholder="Ingresa tu usuario">
-                        <p>Password</p>
-                        <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña">
-                        <button type="submit">Iniciar Sesión</button>
-                    </form>
-                </div>
+            <div class="form-container">
+                <h1 style="font-size: 2.5rem;">Log In</h1>
+                <form action="" class="login-form">
+                    <p style="margin-top: 0;">Usuario</p>
+                    <input type="text" name="username" id="username" placeholder="Ingresa tu usuario">
+                    <p>Contraseña</p>
+                    <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña">
+                    <button type="submit">Iniciar Sesión</button>
+                </form>
                 <p class="register-prompt">No esta resgistrado?<a href="#">Sign up</a></p>
             </div>
         </div>
