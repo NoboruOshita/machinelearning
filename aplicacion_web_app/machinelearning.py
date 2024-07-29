@@ -35,12 +35,12 @@ def preprocesamiento_datos(data):
 
 # Entrenamiento de modelos
 def modeloRF(X_train, y_train):
-    rf_model = RandomForestClassifier(n_estimators=100, random_state=42, max_depth=9)
+    rf_model = RandomForestRegressor(n_estimators=100, random_state=42, max_depth=9)
     rf_model.fit(X_train, y_train)
     return rf_model
 
 def modeloGB(X_train, y_train):
-    gb_model = GradientBoostingClassifier(n_estimators=100, random_state=42)
+    gb_model = GradientBoostingRegressor(n_estimators=100, random_state=42)
     gb_model.fit(X_train, y_train)
     return gb_model
     
