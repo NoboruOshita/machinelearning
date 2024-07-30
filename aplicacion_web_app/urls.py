@@ -3,6 +3,6 @@ from . import views, machinelearning
 
 urlpatterns = [
     path('',views.login,name='login'),
-    path('signup/',views.sign_up,name='sign_up')
+    path('sign_up/',views.sign_up,name='sign_up')
     #path('MachineLearning/', machinelearning.MachineLearning, name='MachineLearning'),
 ]
