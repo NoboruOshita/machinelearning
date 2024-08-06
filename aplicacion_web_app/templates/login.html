@@ -16,14 +16,15 @@
         <div class="right-container">
             <div class="form-container">
                 <h1 style="font-size: 2.5rem;">Log In</h1>
-                <form action="" class="login-form">
+                <form action="{% url 'login' %}" method="post" class="login-form">
+                    {% csrf_token %}
                     <p style="margin-top: 0;">Usuario</p>
                     <input type="text" name="username" id="username" placeholder="Ingresa tu usuario">
                     <p>Contraseña</p>
                     <input type="password" name="password" id="password" placeholder="Ingresa tu contraseña">
                     <button type="submit">Iniciar Sesión</button>
                 </form>
-                <p class="register-prompt">No esta resgistrado?<a href="#">Sign up</a></p>
+                <p class="register-prompt">No esta resgistrado?<a href="sign_up">Sign up</a></p>
             </div>
         </div>
     </div>
