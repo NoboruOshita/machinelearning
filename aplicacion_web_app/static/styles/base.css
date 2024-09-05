@@ -1,0 +1,45 @@
+
+body, .container-main{
+    margin: 0;
+    padding: 0;
+}
+
+.container-main{
+    display: flex;
+}
+
+.navbar{
+    width: 4rem;
+    padding: 0 0 0 3rem ;
+    background-color: #FAFAFA;
+}
+
+li{
+    list-style: none;
+}
+
+.nav-item{
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    margin-top: 12px;
+}
+
+.nav-item:last-child{
+    margin-top: 23rem;
+}
+
+.nav-item i{
+    font-size: 37px;
+}
+
+img{
+    width: 40px;
+    padding: 0 0 0 9px;
+}
+
+/*****/
+
+.container-content{
+    width: 100%;
+}

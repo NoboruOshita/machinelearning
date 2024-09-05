@@ -1,7 +1,11 @@
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse #Prueba
 from rest_framework.decorators import api_view #Prueba en postman
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 
@@ -9,18 +13,19 @@ from django.contrib import messages
 from . models import *
 from datetime import datetime
 
-def login(request):
+def loginUser(request):
     if request.method == 'POST':
-        usuario = request.POST.get('username')
-        psw = request.POST.get('password') 
-        try:
-            data =  auth_user.objects.get(username=usuario, password=psw)
-            if(data):
-                
-                JsonResponse({'Mensaje' : 'Usuario encontrado'}, status = 200)
-        except auth_user.DoesNotExist:
-            JsonResponse({'Mensaje' : 'Usuario no encontrado'}, status = 400)
-    return render(request, 'login.html')
+        usuario = request.POST['username']
+        psw = request.POST['password']
+        user = authenticate(request, username = usuario, password = psw)
+        if user is not None:
+            login(request, user)
+            messages.success(request, "Inicio de sesión exitoso. ¡Bienvenido!")
+            return redirect('index')
+        else:
+            messages.error(request, "Credenciales inválidas. Por favor, verifica tus credenciales e inténtalo nuevamente.")
+            return redirect('login')
+    return render(request, 'appweb/login.html')
 
 def sign_up(request):
     if request.method == 'POST':
@@ -43,18 +48,21 @@ def sign_up(request):
         if auth_user.objects.filter(username=usuario_nuevo).exists() or auth_user.objects.filter(email=correo).exists():
             return JsonResponse({'Mensaje': 'El nombre de usuario o el correo electrónico ya están en uso'}, status=400)
         
-        # GUARDADON EN LA BASE DE DATOS
-        try: 
-            fecha_sesion_iniciada = datetime.today()
-            auth_user.objects.create(
-                password = make_password(pass_nuevo),
-                last_login = fecha_sesion_iniciada,
-                username = usuario_nuevo,
-                email = correo
+       # GUARDADO EN LA BASE DE DATOS
+        try:
+            user = User.objects.create_user(
+                username=usuario_nuevo,
+                email=correo,
+                password=pass_nuevo
             )
-            return JsonResponse({'Mensaje' : 'Se registro correctamente'}, status = 200)
+            user.save()  # Esto guarda el usuario en PostgreSQL
+            messages.success(request, 'Se registró correctamente')
+            return redirect('login')
         except Exception as e:
             print('No se pudo registrar. Error: ', e)
             return JsonResponse({'Mensaje' : 'Error interno del servidor'}, status = 500)
-    return render(request, 'signup.html')
- 
+    return render(request, 'appweb/signup.html')
+
+@login_required
+def index(request):
+    return render(request, 'appweb/index.html')
