@@ -11,9 +11,9 @@ def cleaningData(rawData):
     rawData = rawData.drop_duplicates()
     rawData = rawData.dropna()
     # Convertir datos continuos en etiquetas binarias
-    rawData['Target'] = (rawData['Entropy'] > 0.99).astype(int)  # Ajusta el umbral según tu necesidad
+    rawData['Target'] = (rawData['Entropy'] > 0.3).astype(int)  # Ajusta el umbral según tu necesidad
     # Eliminar la última columna que no es necesaria
-    rawData = rawData.drop('EliminarDato', axis=1)
+    rawData = rawData.drop('deleteColumn', axis=1)
     cleanedData = rawData.copy()
     return cleanedData
 
@@ -30,7 +30,7 @@ def xgBoost(request):
     rawData = pd.read_csv(file, delimiter=',', header=None)
 
     # Add name in the columns
-    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'EliminarDato']
+    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'deleteColumn']
     rawData.columns = nameColumns
 
     # Process of cleaning data
@@ -47,12 +47,12 @@ def xgBoost(request):
     # Parámetros del modelo con ajustes para reducir sobreajuste
     params = {
         'objective': 'binary:logistic',  # Para clasificación binaria
-        'max_depth': 3,                  # Reduce la profundidad del árbol
-        'eta': 0.05,                     # Reduce la tasa de aprendizaje
+        'max_depth': 2,                  # Reduce la profundidad del árbol
+        'eta': 0.10,                     # Reduce la tasa de aprendizaje
         'eval_metric': 'logloss',
         'seed': 42,
-        'alpha': 1,                      # Regularización L1
-        'lambda': 1,                     # Regularización L2
+        'alpha': 10,                      # Regularización L1
+        'lambda': 10,                     # Regularización L2
         'gamma': 1,                      # Reducción mínima en la pérdida para hacer particiones
         'subsample': 0.8,                # Fracción de datos a usar en cada árbol
         'colsample_bytree': 0.8          # Fracción de columnas a usar en cada árbol
@@ -67,7 +67,7 @@ def xgBoost(request):
 
     # Hacer predicciones
     y_pred_prob = bst.predict(dtest)
-    y_pred = [1 if prob > 0.5 else 0 for prob in y_pred_prob]
+    y_pred = [1 if prob > 0.3 else 0 for prob in y_pred_prob]
     
     # Calcular métricas
     accuracy = accuracy_score(y_test, y_pred)
