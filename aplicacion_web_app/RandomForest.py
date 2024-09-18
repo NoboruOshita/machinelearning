@@ -1,14 +1,12 @@
 from django.http import JsonResponse
-from django.forms import ValidationError
+
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import accuracy_score, classification_report, mean_absolute_error,mean_squared_error, r2_score, confusion_matrix
-from sklearn.preprocessing import MinMaxScaler, OrdinalEncoder
-from sklearn.metrics import roc_auc_score,confusion_matrix,f1_score,classification_report,\
-                            accuracy_score,precision_score,recall_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
+
 # Clear Data Function (drop column, duplicate and None)
 def cleaningData(rawData):
     rawData = rawData.drop(['Target'], axis=1)
@@ -25,7 +23,7 @@ def preProcessingData(model, X_train, y_train):
 
 
 
-# Model Random Forest (RF)
+# Algoritmo Random Forest (RF)
 def randomForest(request):
     if(request.method != 'POST'):
         return JsonResponse({'error': 'Bad request'}, status = 500) 
