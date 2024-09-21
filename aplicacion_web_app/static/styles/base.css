@@ -2,17 +2,22 @@
 body, .container-main{
     margin: 0;
     padding: 0;
+    height: 52.25rem;
 }
 
 .container-main{
     display: flex;
 }
 
-.navbar{
+.container-navbar{
     width: 4rem;
-    padding: 0 0 0 3rem ;
-    background-color: #FAFAFA;
+    padding: 0;
+    background-color: white;
+    align-items: stretch;
 }
+.navbar{
+    margin-top: 2rem;
+} 
 
 li{
     list-style: none;
@@ -26,20 +31,22 @@ li{
 }
 
 .nav-item:last-child{
-    margin-top: 23rem;
+    display: flex;
+    flex-direction: column;
+    margin-top: 35rem;
+    align-items: flex-end
 }
 
 .nav-item i{
-    font-size: 37px;
+    font-size: 48px;
+    color: black;
 }
 
 img{
-    width: 40px;
-    padding: 0 0 0 9px;
+    width: 47px;
 }
-
-/*****/
 
 .container-content{
     width: 100%;
+    background-color: #eae5e5c5;
 }

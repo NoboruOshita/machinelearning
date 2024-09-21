@@ -1,0 +1,38 @@
+.content-detection, input{
+    font-family: sans-serif;
+}
+
+h1{
+    text-align: center;
+}
+
+p{
+    margin:20px 0 5px 0;
+}
+
+form{
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
+input{
+    width: 100%;
+    padding: 4px 53px 4px 3px;
+    background-color: #F8F8F8;
+    border-radius: 5px;
+    border-color: #F8F8F8;
+}
+button{
+    width: 10%;
+    margin: 5rem 0 0 42rem;
+}
+
+.box__inputs{
+    display: flex;
+    justify-content: center;
+    gap: 15rem;
+}
+
+.box__inputs:last-of-type{
+    margin-right: 29rem;
+}

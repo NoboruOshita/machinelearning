@@ -11,13 +11,13 @@ def cleaningData(rawData):
     rawData = rawData.drop_duplicates()
     rawData = rawData.dropna()
     # Convertir datos continuos en etiquetas binarias
-    rawData['Target'] = (rawData['Entropy'] > 0.3).astype(int)  # Ajusta el umbral según tu necesidad
+    rawData['Target'] = (rawData['Entropy'] > 0.80).astype(int)  # Ajusta el umbral según tu necesidad
     # Eliminar la última columna que no es necesaria
     rawData = rawData.drop('deleteColumn', axis=1)
     cleanedData = rawData.copy()
     return cleanedData
 
-# Algoritmo de Extreme Gradient Boosting (XGBoost) para clasificación
+# Extreme Gradient Boosting (XGBoost) algorithm for classification
 def xgBoost(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Bad request'}, status=400)
@@ -27,7 +27,7 @@ def xgBoost(request):
     if file is None:
         return JsonResponse({'error': 'No file provided'}, status=400)
     
-    rawData = pd.read_csv(file, delimiter=',', header=None)
+    rawData = pd.read_excel(file, delimiter=',', header=None)
 
     # Add name in the columns
     nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'deleteColumn']
@@ -44,48 +44,48 @@ def xgBoost(request):
     dtrain = xgb.DMatrix(X_train, label=y_train)
     dtest = xgb.DMatrix(X_test, label=y_test)
 
-    # Parámetros del modelo con ajustes para reducir sobreajuste
+    # Model parameters with adjustments to reduce overfitting
     params = {
-        'objective': 'binary:logistic',  # Para clasificación binaria
-        'max_depth': 2,                  # Reduce la profundidad del árbol
-        'eta': 0.10,                     # Reduce la tasa de aprendizaje
+        'objective': 'binary:logistic',  # For binary classification
+        'max_depth': 2,                  # Reduces tree depth
+        'eta': 0.10,                     # Reduces the learning rate
         'eval_metric': 'logloss',
         'seed': 42,
-        'alpha': 10,                      # Regularización L1
-        'lambda': 10,                     # Regularización L2
-        'gamma': 1,                      # Reducción mínima en la pérdida para hacer particiones
-        'subsample': 0.8,                # Fracción de datos a usar en cada árbol
-        'colsample_bytree': 0.8          # Fracción de columnas a usar en cada árbol
+        'alpha': 10,                     # Regularization L1
+        'lambda': 10,                    # Regularization L2
+        'gamma': 1,                      # Minimization of partitioning losses
+        'subsample': 0.8,                # Fraction of data to be used in each tree
+        'colsample_bytree': 0.8          # Fraction of columns to be used in each tree
     }
 
-    # Número de rondas de entrenamiento
-    numRound = 5  # Ajustar si es necesario
+    # Number of training rounds
+    numRound = 5
 
-    # Entrenamiento del modelo con early stopping
+    # Model training with early stopping
     evals = [(dtrain, 'train'), (dtest, 'eval')]
     bst = xgb.train(params, dtrain, numRound, evals, early_stopping_rounds=5)
 
-    # Hacer predicciones
+    # Making predictions
     y_pred_prob = bst.predict(dtest)
     y_pred = [1 if prob > 0.3 else 0 for prob in y_pred_prob]
     
-    # Calcular métricas
+    # Calculate metrics
     accuracy = accuracy_score(y_test, y_pred)
     precision = precision_score(y_test, y_pred)
     recall = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
     
-    # Evaluar precisión cruzada usando un modelo compatible
+    # Evaluate cross-accuracy using a compatible model
     cross_val_model = xgb.XGBClassifier(**params)
     cross_val_acc = cross_val_score(cross_val_model, X, y, cv=5, scoring='accuracy').mean()
     
     print(f"Training data shape: {X_train.shape}")
     print(f"Test data shape: {X_test.shape}")
 
-    # Verifica que no haya superposición
+    # Verify that there is no overlap
     print(f"Any overlap between train and test data: {np.any(np.in1d(X_train.values, X_test.values))}")
 
-    # Devolver una respuesta con las métricas
+    # Return a response with metrics
     response = {
         'message': 'Model trained!',
         'Accuracy': accuracy,

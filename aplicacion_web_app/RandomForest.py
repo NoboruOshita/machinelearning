@@ -9,7 +9,7 @@ from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
 
 # Clear Data Function (drop column, duplicate and None)
 def cleaningData(rawData):
-    rawData = rawData.drop(['Target'], axis=1)
+    rawData = rawData.drop(['deleteColumn'], axis=1)
     rawData = rawData.drop_duplicates()
     rawData = rawData.dropna()
     cleanedData = rawData.copy()
@@ -36,9 +36,9 @@ def randomForest(request):
     rawData = pd.read_csv(file, delimiter=',', header=None)
 
     # Add name in the columns
-    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'Target']
+    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'deleteColumn']
     rawData.columns = nameColumns
-
+    print(rawData)
     # Process of cleaning data
     cleanedData = cleaningData(rawData)
 

@@ -66,3 +66,7 @@ def sign_up(request):
 @login_required
 def index(request):
     return render(request, 'appweb/index.html')
+
+@login_required
+def detection(request):
+    return render(request, 'appweb/detection/detection.html')

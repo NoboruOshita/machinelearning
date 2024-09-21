@@ -1,0 +1,41 @@
+{% extends "appweb/index.html" %}
+{% load static %}
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'styles/detection.css' %}">
+</head>
+    <div class="content-detection">
+        <h1>Detectar Ransomware</h1>
+        <div class="form">
+            <form action="" method="POST">
+
+                <div class="box__inputs">
+                    <div class="box">
+                        <p>Timestamp [s]</p>
+                        <input type="text" name="timestamp_s" id="timestamp_s" placeholder="Ingrese el  Timestamp en segundo">
+                    </div>
+                    <div class="box">
+                        <p>Timestamp [ms]</p>
+                        <input type="text" name="Timestamp_ms" id="Timestamp_ms" placeholder="Ingrese el Timestamp  en microsegundos">
+                    </div>
+                    <div class="box">
+                        <p>Dirección de bloque lógico</p>
+                        <input type="text" name="LBA" id="LBA" placeholder="Ingrese el LBA">
+                    </div>
+                </div>
+
+                <div class="box__inputs">
+                    <div class="box">
+                        <p>Tamaño del bloque</p>
+                        <input type="text" name="Bloque" id="Bloque" placeholder="Ingrese el tamaño del bloque">
+                    </div>
+                    <div class="box">
+                        <p>Entropía de Shannon</p>
+                        <input type="text" name="Entropía" id="Entropía" placeholder="Ingrese la Entropía de Shannon normalizada">
+                    </div>
+                </div>
+                <button type="submit">Examinar Datos</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

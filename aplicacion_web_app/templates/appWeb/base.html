@@ -14,39 +14,31 @@
             <div class="navbar">
                 <li class="nav-item">
                     <a href="">
-                        <i class="bi bi-person-circle"></i>
-                        <span>Cuenta</span>
+                        <i class="bi bi-house"></i>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'detection' %}">
+                        <img src="{% static 'img/logoML.png' %}" alt="logoML">
+                       
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="">
-                        <i class="bi bi-house-fill"></i>
-                        <span>Inicio</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="">
-                        <img src="../../static/img/logoML.png" alt="logoML">
-                        <span>Dectectar Ransomware</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="">
-                    <img src="../../static/img/logoHistorial.png" alt="logoHistorial">
-                        <span>Historial de Ransomware detectado</span>
+                    <img src="{% static 'img/logoHistorial.png' %}" alt="logoHistorial">
                     </a>
                 </li>  
                 <li class="nav-item">
                     <a href="">
-                        <i class="bi bi-box-arrow-left"></i>
-                        <span>Cerrar Sesión</span>
+                        <i class="bi bi-box-arrow-in-left"></i>
                     </a>
                 </li>
             </div>
         </div>
 
         <div class="container-content">
-            <h1>OCHO PEGA UNO</h1>
+            {% block content %}
+            {% endblock content %}
         </div>
     </div>
 </body>
