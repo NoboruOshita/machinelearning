@@ -7,12 +7,12 @@
     <div class="content-detection">
         <h1>Detectar Ransomware</h1>
         <div class="form">
-            <form action="" method="POST">
+            <form action="{% url 'predicRansomware' %}" method="POST">
 
                 <div class="box__inputs">
                     <div class="box">
                         <p>Timestamp [s]</p>
-                        <input type="text" name="timestamp_s" id="timestamp_s" placeholder="Ingrese el  Timestamp en segundo">
+                        <input type="text" name="Timestamp_s" id="Timestamp_s" placeholder="Ingrese el  Timestamp en segundo">
                     </div>
                     <div class="box">
                         <p>Timestamp [ms]</p>
@@ -27,15 +27,21 @@
                 <div class="box__inputs">
                     <div class="box">
                         <p>Tamaño del bloque</p>
-                        <input type="text" name="Bloque" id="Bloque" placeholder="Ingrese el tamaño del bloque">
+                        <input type="text" name="Size" id="Size" placeholder="Ingrese el tamaño del bloque">
                     </div>
                     <div class="box">
                         <p>Entropía de Shannon</p>
-                        <input type="text" name="Entropía" id="Entropía" placeholder="Ingrese la Entropía de Shannon normalizada">
+                        <input type="text" name="Entropy" id="Entropy" placeholder="Ingrese la Entropía de Shannon normalizada">
                     </div>
                 </div>
                 <button type="submit">Examinar Datos</button>
             </form>
+            {% if ransomware_type %}
+                <h2>El tipo de ransomware es: {{ ransomware_type }}</h2>
+            {% endif %}
+            {% if probability %}
+                <h2>El porcentaje de confiabilidad de RF: {{ probability }}</h2>
+            {% endif %}
         </div>
     </div>
 {% endblock content %}

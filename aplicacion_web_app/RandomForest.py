@@ -1,15 +1,16 @@
 from django.http import JsonResponse
 
-
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import joblib
 from sklearn.model_selection import KFold, cross_val_score, train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.preprocessing import MinMaxScaler
 
 # Clear Data Function (drop column, duplicate and None)
 def cleaningData(rawData):
-    rawData = rawData.drop(['deleteColumn'], axis=1)
     rawData = rawData.drop_duplicates()
     rawData = rawData.dropna()
     cleanedData = rawData.copy()
@@ -18,10 +19,39 @@ def cleaningData(rawData):
 # Pre-processing Cross Validation
 def preProcessingData(model, X_train, y_train):
     kf = KFold(n_splits = 5, shuffle = True, random_state = 42)
-    cvScores = cross_val_score(model, X_train, y_train, cv = kf, scoring='r2')
+    cvScores = cross_val_score(model, X_train, y_train, cv = kf, scoring='accuracy') # Se usa 'accuracy' para clasificación
     return cvScores
 
+# Curvas de Aprendizaje
+def learningCurves(model, X_train, y_train, X_test, y_test):
+    train_accuracies = []
+    test_accuracies = []
+    train_sizes = np.linspace(0.1, 0.9, 10)  # Ajustar el rango para evitar 1.0
+    
+    for train_size in train_sizes:
+        X_train_partial, _, y_train_partial, _ = train_test_split(X_train, y_train, train_size=train_size, random_state=42)
+        model.fit(X_train_partial, y_train_partial)
+        
+        # Accuracy on the training set
+        y_train_pred = model.predict(X_train_partial)
+        train_acc = accuracy_score(y_train_partial, y_train_pred)
+        train_accuracies.append(train_acc)
+        
+        # Accuracy on the test set
+        y_test_pred = model.predict(X_test)
+        test_acc = accuracy_score(y_test, y_test_pred)
+        test_accuracies.append(test_acc)
 
+    # Plot learning curves
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_sizes, train_accuracies, label="Training Accuracy", marker='o')
+    plt.plot(train_sizes, test_accuracies, label="Test Accuracy", marker='o')
+    plt.title("Learning Curves for Random Forest Classifier")
+    plt.xlabel("Training Set Size")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 # Algoritmo Random Forest (RF)
 def randomForest(request):
@@ -33,23 +63,27 @@ def randomForest(request):
     if(file is None):
         return JsonResponse({'error': 'No file provided'}, status = 400)
     
-    rawData = pd.read_csv(file, delimiter=',', header=None)
+    rawData = pd.read_excel(file, header=None)
 
     # Add name in the columns
-    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'deleteColumn']
+    nameColumns = ['Timestamp_s', 'Timestamp_us', 'LBA', 'Size', 'Entropy', 'Type_ransomware']
     rawData.columns = nameColumns
     print(rawData)
+    
     # Process of cleaning data
     cleanedData = cleaningData(rawData)
-
+    
     # Separate data in feature (X) and object variable (y), then in train and test
     data = cleanedData
-    X = data.drop('Entropy', axis = 1)
-    y = data['Entropy']
+    X = data.drop('Type_ransomware', axis = 1)
+    y = data['Type_ransomware']
+
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
     
+    
     # Configuration model RF
-    model = RandomForestRegressor(n_estimators = 315, max_depth = 10, random_state = 42, criterion = 'squared_error')
+    model = RandomForestClassifier(n_estimators = 8, max_depth = 3, random_state = 42, criterion="gini")
+    #model = RandomForestClassifier(n_estimators = 4, max_depth = 3, random_state = 42, criterion="entropy")
 
     # Pre-processing data with Cross Validation
     cv_scores = preProcessingData(model, X_train, y_train)
@@ -58,16 +92,38 @@ def randomForest(request):
 
     # Evaluate the model on the test set
     y_pred = model.predict(X_test)
-    test_r2 = r2_score(y_test, y_pred) # This is the accuracy
-    test_mse = mean_squared_error(y_test, y_pred)
-    test_rmse = np.sqrt(test_mse)
-    test_mae = mean_absolute_error(y_test, y_pred)
+
+    confusionMatrix = confusion_matrix(y_test, y_pred)
+    print(confusionMatrix)
+
+    TN = confusionMatrix[0][0]
+    FP = confusionMatrix[0][1]
+    FN = confusionMatrix[1][0]
+    TP = confusionMatrix[1][1]
+    print("TN: ", TN)
+    print("FP: ", FP)
+    print("FN: ", FN)
+    print("TP: ", TP)
+    
+    test_accuracy = accuracy_score(y_test, y_pred)
+    test_precision = precision_score(y_test, y_pred, average='weighted')
+    test_recall = recall_score(y_test, y_pred, average='weighted')
+    test_f1 = f1_score(y_test, y_pred, average='weighted')
+
+    # Evaluar el modelo en el conjunto de prueba
+    test_accuracy = model.score(X_test, y_test)
 
     # Results
-    print("Cross-validation scores (R^2):", cv_scores)
-    print("Mean cross-validation R^2:", cv_scores.mean())
-    print("Test set R^2:", test_r2)
-    print("Test set MSE:", test_mse)
-    print("Test set RMSE:", test_rmse)
-    print("Test set MAE:", test_mae)
+    print("Cross-validation scores (Accuracy):", cv_scores)
+    print("Precisión en el conjunto de prueba:", test_accuracy)
+
+    print("Mean cross-validation Accuracy:", cv_scores.mean())
+    print("Test set Accuracy:", test_accuracy)
+    print("Test set Precision:", test_precision)
+    print("Test set Recall:", test_recall)
+    print("Test set F1 Score:", test_f1)
+
+    # Plot the learning curves
+    learningCurves(model, X_train, y_train, X_test, y_test)
+    joblib.dump(model, 'random_forest_model.pkl')
     return JsonResponse({'message': 'File processed successfully'}, status=200)
