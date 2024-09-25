@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, machinelearning, RandomForest, xgboosting
+from . import views, RandomForest, xgboosting
 
 urlpatterns = [
     path('',views.loginUser,name='login'),

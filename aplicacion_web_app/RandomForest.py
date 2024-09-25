@@ -93,8 +93,9 @@ def randomForest(request):
     # Evaluate the model on the test set
     y_pred = model.predict(X_test)
 
+    # Confusion Matrix
     confusionMatrix = confusion_matrix(y_test, y_pred)
-    print(confusionMatrix)
+    print('Matrix de confusión\n', confusionMatrix)
 
     TN = confusionMatrix[0][0]
     FP = confusionMatrix[0][1]
