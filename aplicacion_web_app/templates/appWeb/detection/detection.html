@@ -3,6 +3,7 @@
 {% block content %}
 <head>
     <link rel="stylesheet" href="{% static 'styles/detection.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
     <div class="content-detection">
         <h1>Detectar Ransomware</h1>
@@ -36,12 +37,24 @@
                 </div>
                 <button type="submit">Examinar Datos</button>
             </form>
-            {% if ransomware_type %}
+            {% if ransomware_type and probability >= 50 and ransomware_type != None and probability != None %}
+                <h2 style="color: red;">ALERTA RANSOMWARE DETECTADO!!!!!</h2>
                 <h2>El tipo de ransomware es: {{ ransomware_type }}</h2>
-            {% endif %}
-            {% if probability %}
                 <h2>El porcentaje de confiabilidad de RF: {{ probability }}</h2>
+            {% elif ransomware_type != None and probability != None %}
+                <h2 style="color: green;">RANSOMWARE NO DETECTADO</h2>
             {% endif %}
         </div>
     </div>
-{% endblock content %}
+    <script>
+        {% if error_message %}
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: '{{ error_message }}',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+        {% endif %}
+    </script>
+{% endblock content %}

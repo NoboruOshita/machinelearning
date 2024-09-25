@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import LabelEncoder
 
@@ -95,7 +95,20 @@ def xgBoost(request):
 
     # Making predictions
     y_pred = xgb_model.predict(X_test)
-    
+
+    # Confusion Matrix
+    confusionMatrix = confusion_matrix(y_test, y_pred)
+    print('Matrix de confusión\n', confusionMatrix)
+
+    TN = confusionMatrix[0][0]
+    FP = confusionMatrix[0][1]
+    FN = confusionMatrix[1][0]
+    TP = confusionMatrix[1][1]
+    print("TN: ", TN)
+    print("FP: ", FP)
+    print("FN: ", FN)
+    print("TP: ", TP)
+
     # Calculate metrics
     precision = precision_score(y_test, y_pred, average='macro')
     recall = recall_score(y_test, y_pred, average='macro')

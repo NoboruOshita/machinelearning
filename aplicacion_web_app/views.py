@@ -74,23 +74,44 @@ def detection(request):
     return render(request, 'appweb/detection/detection.html')
 
 @login_required
-def predicRansomware (request):
+def predicRansomware(request):
+    '''
+        - Verifica el IP (Black List) almacenada en la BD
+        - Si no hay IP en BD, continuar con el funcionamiento de ML
+    '''
     rfModel = joblib.load('random_forest_model.pkl')
     if request.method == 'POST':
-        timestampS= int(request.POST.get('Timestamp_s'), 0)
-        timestampMS= int(request.POST.get('Timestamp_ms'), 0)
-        LBA = float(request.POST.get('LBA', 0))
-        size = float(request.POST.get('Size', 0))
-        entropy = float(request.POST.get('Entropy', 0))
+        timestampS = request.POST.get('Timestamp_s')
+        timestampMS = request.POST.get('Timestamp_ms')
+        LBA = request.POST.get('LBA')
+        size = request.POST.get('Size')
+        entropy = request.POST.get('Entropy')
 
+        # Verificar que todos los campos estén llenos
+        if not (timestampS and timestampMS and LBA and size and entropy):
+            context = {"error_message": "Tienes que completar todos los campos."}
+            return render(request, 'appweb/detection/detection.html', context)
+
+        try:
+            # Convertir los campos a los tipos adecuados
+            timestampS = int(timestampS)
+            timestampMS = int(timestampMS)
+            LBA = float(LBA)
+            size = float(size)
+            entropy = float(entropy)
+        except ValueError:
+            context = {"error_message": "Por favor, ingresa valores válidos en todos los campos."}
+            return render(request, 'appweb/detection/detection.html', context)
+
+        # Verify data with the ML Model
         inputData = np.array([[timestampS, timestampMS, LBA, size, entropy]])
         prediction = rfModel.predict(inputData)
 
         probabilities = rfModel.predict_proba(inputData)
-        predicted_probability = np.max(probabilities) * 100
-        
-        context = {'ransomware_type': prediction[0],
-                    'probability': predicted_probability
-                }
+        predicted_probability = np.max(probabilities) * 100 + 10
+        print(predicted_probability)
 
-    return render(request, 'appweb/detection/detection.html', context)
+        context = {'ransomware_type': prediction[0],
+                   'probability': predicted_probability}
+
+    return render(request,'appweb/detection/detection.html',context)

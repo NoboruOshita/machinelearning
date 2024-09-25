@@ -1,4 +1,5 @@
 .content-detection, input{
+    max-width: 100%;
     font-family: sans-serif;
 }
 
@@ -23,8 +24,14 @@ input{
     border-color: #F8F8F8;
 }
 button{
-    width: 10%;
-    margin: 5rem 0 0 42rem;
+    width: 13%;
+    margin: 4rem 0 0 40rem;
+    background-color: #89B758;
+    border: none;
+    border-color: white;
+    border-radius: 15px;
+    padding: 14px 0px;
+    color: white;
 }
 
 .box__inputs{
@@ -35,4 +42,11 @@ button{
 
 .box__inputs:last-of-type{
     margin-right: 29rem;
+}
+
+.swal2-confirm {
+    padding: 10px 43px 7px 19px;
+    font-size: 16px;
+    background-color: #3085d6;
+    border-radius: 5px;
 }
