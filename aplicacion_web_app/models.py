@@ -4,9 +4,9 @@ from django.db import models
 class auth_user(models.Model):
     id=models.BigAutoField(primary_key=True)
     password=models.CharField(max_length=128, null=False, blank=True)
-    last_login =models.DateTimeField(null=True, blank=True)
-    username =models.CharField(max_length=150, null=False, blank=True)
-    email = models.CharField(max_length=150, null=False, blank=True)
+    last_login=models.DateTimeField(null=True, blank=True)
+    username=models.CharField(max_length=150, null=False, blank=True)
+    email=models.CharField(max_length=150, null=False, blank=True)
     class Meta:
         managed = False
         db_table = 'auth_user'
@@ -78,3 +78,6 @@ class logs(models.Model):
     id_logs=models.IntegerField(primary_key=True)
     id_detection_id=models.ForeignKey('detection', on_delete=models.CASCADE)
     id_response_id=models.ForeignKey('response', on_delete=models.CASCADE)
+    class Meta:
+        managed = False
+        db_table = 'logs'
