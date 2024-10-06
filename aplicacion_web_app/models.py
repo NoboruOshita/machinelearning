@@ -14,6 +14,7 @@ class auth_user(models.Model):
 class blacklist(models.Model):
     id_blacklist=models.IntegerField(primary_key=True)
     IP=models.CharField(max_length=100, null=False, blank=True)
+    ransomware_type=models.CharField(max_length=100, null=False, blank=True)
     class Meta:
         managed = False
         db_table = 'blacklist'
@@ -35,7 +36,7 @@ class detection(models.Model):
     id_detection=models.IntegerField(primary_key=True)
     id_data_ransomware_id=models.ForeignKey('data_ransomware', on_delete=models.CASCADE)
     ransomware_detected=models.BooleanField(default=False)
-    ransomware_type=models.CharField(max_length=50, null=False, blank=True)
+    ransomware_type=models.CharField(max_length=100, null=False, blank=True)
     percentage_reliability=models.FloatField(null=True, blank=True)
     detection_date=models.DateField(null=True, blank=True)
     class Meta:
