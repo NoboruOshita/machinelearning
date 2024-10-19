@@ -3,7 +3,8 @@ body{
 }
 
 body, h2{
-    margin:0;
+    margin: 0;
+    padding: 0;
 }
 
 h1{
@@ -11,7 +12,6 @@ h1{
 }
 
 h2{
-    width: 40%;
     font-size: 2rem;
 }
 
@@ -37,17 +37,18 @@ button{
 .main-container{
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    height: 52.2rem;
 }
 
 .left-container{
     background-color: #E9E8E9;
-    padding: 18.94rem 7rem;
+    padding: 21.2rem 11rem;
 }
 
 .right-container{
     background-color: #FAFAFA;
-    padding: 15.10rem 8rem;
+    padding: 16.1rem 9rem;
 }
 
 .login-form{
