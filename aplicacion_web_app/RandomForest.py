@@ -82,7 +82,8 @@ def randomForest(request):
     
     
     # Configuration model RF
-    model = RandomForestClassifier(n_estimators = 8, max_depth = 3, random_state = 42, criterion="gini")
+    #model = RandomForestClassifier(n_estimators = 100, max_depth = 5, random_state = 42, criterion="gini")
+    model = RandomForestClassifier(n_estimators= 160, max_depth= 4, criterion="gini")
     #model = RandomForestClassifier(n_estimators = 4, max_depth = 3, random_state = 42, criterion="entropy")
 
     # Pre-processing data with Cross Validation
@@ -127,4 +128,4 @@ def randomForest(request):
     # Plot the learning curves
     learningCurves(model, X_train, y_train, X_test, y_test)
     joblib.dump(model, 'random_forest_model.pkl')
-    return JsonResponse({'message': 'File processed successfully'}, status=200)
+    return JsonResponse({'message': 'File processed successfully'},status=200)
