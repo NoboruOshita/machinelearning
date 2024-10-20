@@ -2,6 +2,7 @@ from django.http import JsonResponse
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import joblib
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
@@ -76,17 +77,17 @@ def xgBoost(request):
     # Model parameters
     params = {
         'objective': 'multi:softmax',
-        'n_estimators': 4,
-        'max_depth': 3,
-        'eta': 0.9,
+        'n_estimators': 100,
+        'max_depth': 5,
+        'eta': 0.3,
         'num_class': len(data['Type_ransonware'].unique()),
         'eval_metric': 'mlogloss',
         'seed': 42,
-        'alpha': 1,
-        'lambda': 1,
+        'alpha': 6,
+        'lambda': 6,
         'gamma': 1,
-        'subsample': 0.2,
-        'colsample_bytree': 0.2
+        'subsample': 0.6,
+        'colsample_bytree': 0.6
     }
 
     # Using XGBClassifier
@@ -100,15 +101,6 @@ def xgBoost(request):
     confusionMatrix = confusion_matrix(y_test, y_pred)
     print('Matrix de confusión\n', confusionMatrix)
 
-    TN = confusionMatrix[0][0]
-    FP = confusionMatrix[0][1]
-    FN = confusionMatrix[1][0]
-    TP = confusionMatrix[1][1]
-    print("TN: ", TN)
-    print("FP: ", FP)
-    print("FN: ", FN)
-    print("TP: ", TP)
-
     # Calculate metrics
     precision = precision_score(y_test, y_pred, average='macro')
     recall = recall_score(y_test, y_pred, average='macro')
@@ -116,7 +108,7 @@ def xgBoost(request):
     accuracy = accuracy_score(y_test, y_pred)
 
     # Evaluate cross-accuracy using the scikit-learn compatible model
-    cross_val_acc = cross_val_score(xgb_model, X, y, cv=5, scoring='accuracy').mean()
+    cross_val_acc = cross_val_score(xgb_model, X, y, cv=7, scoring='accuracy').mean()
     
     print(f"Training data shape: {X_train.shape}")
     print(f"Test data shape: {X_test.shape}")
@@ -134,5 +126,6 @@ def xgBoost(request):
 
     # Call learning curves function
     learningCurves(xgb_model, X_train, y_train, X_test, y_test)
-
+    joblib.dump(xgb_model, 'xg_boost_model.pkl')
+    joblib.dump(label_encoder, 'label_encoder.pkl')
     return JsonResponse(response)
