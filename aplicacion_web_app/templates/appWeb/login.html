@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,21 +11,21 @@
 <body>
     <div class="main-container">
         <div class="left-container">
-                <h1 style="font-size: 4rem;">Aegis</h1>
-                <h2>Ransomware Detection Application</h2>
+            <h1 style="font-size: 4rem;">Aegis</h1>
+            <h2>{% trans "Aplicación de detección de ransomware" %}</h2>
         </div>
         <div class="right-container">
             <div class="form-container">
-                <h1 style="font-size: 2.5rem;">Log In</h1>
+                <h1 style="font-size: 2.5rem;">{% trans "Iniciar sesión" %}</h1>
                 <form action="{% url 'login' %}" method="post" class="login-form" autocomplete="off">
                     {% csrf_token %}
-                    <p style="margin-top: 0;">Usuario</p>
-                    <input type="text" name="username" id="input_username" placeholder="Ingresa tu usuario">
-                    <p>Contraseña</p>
-                    <input type="password" name="password" id="input_password" placeholder="Ingresa tu contraseña">
-                    <button type="submit">Iniciar Sesión</button>
+                    <p style="margin-top: 0;">{% trans "Usuario" %}</p>
+                    <input type="text" name="username" id="input_username" placeholder="{% trans 'Ingresa tu usuario' %}" required>
+                    <p>{% trans "Contraseña" %}</p>
+                    <input type="password" name="password" id="input_password" placeholder="{% trans 'Ingresa tu contraseña' %}" required>
+                    <button type="submit">{% trans "Iniciar Sesión" %}</button>
                 </form>
-                <p class="register-prompt">No esta resgistrado?<a href="{% url 'signUp' %}">Sign up</a></p>
+                <p class="register-prompt">{% trans "No está registrado?" %}<a href="{% url 'signUp' %}">{% trans "Regístrate" %}</a></p>
             </div>
         </div>
     </div>

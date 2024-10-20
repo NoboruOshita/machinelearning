@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,32 +7,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aegis</title>
     <link rel="stylesheet" href="{% static 'styles/signup.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="main-container">
         <div class="left-container">
-                <h1 style="font-size: 4rem;">Aegis</h1>
-                <h2>Ransomware Detection Application</h2>
+            <h1 style="font-size: 4rem;top: 2.6rem;left: 1rem;">Aegis</h1>
+            <h2>{% trans "Aplicación de detección de ransomware" %}</h2>
         </div>
         <div class="right-container">
             <div class="form-container">
-                <h1 style="font-size: 2.5rem;">Sign Up</h1>
-                <p>¿Ya tiene una cuenta?<a href="{% url 'login' %}"> Log in</a></p>
+                <h1 style="font-size: 2.5rem;">{% trans "Regístrar" %}</h1>
+                <p>{% trans "¿Ya tiene una cuenta?" %}<a href="{% url 'login' %}">{% trans "Iniciar sesión" %}</a></p>
 
                 <form action="{% url 'signUp' %}" method="post" class="login-form">
                     {% csrf_token %}
-                    <p style="margin-top: 0;">Usuario Nuevo</p>
-                    <input type="text" name="username" id="username" placeholder="Nombre de usuario nuevo">
-                    <p>Correo Electronico</p>
-                    <input type="email" name="email" id="email" placeholder="examples@gmail.com">
-                    <p>Contraseña</p>
-                    <input type="password" name="password" id="password" placeholder="Contraseña nueva">
-                    <p>Repetir Contraseña</p>
-                    <input type="password" name="confpassword" placeholder="Repite la contraseña">
-                    <button type="submit">Registrarse</button>
+                    <p style="margin-top: 0;">{% trans "Usuario Nuevo" %}</p>
+                    <input type="text" name="username" id="username" placeholder="{% trans 'Ingrese Nombre de usuario nuevo' %}" required>
+                    <p>{% trans "Correo Electronico" %}</p>
+                    <input type="email" name="email" id="email" placeholder="{% trans 'ejemplo@gmail.com' %}" required>
+                    <p>{% trans "Contraseña" %}</p>
+                    <input type="password" name="password" id="password" placeholder="{% trans 'Ingrese Contraseña nueva' %}" required>
+                    <p>{% trans "Repetir Contraseña" %}</p>
+                    <input type="password" name="confpassword" placeholder="{% trans 'Repita la contraseña' %}" required>
+                    <button type="submit">{% trans "Registrarse" %}</button>
                 </form>
             </div>
         </div>
     </div>
 </body>
+<script>
+    {% if error_message %}
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: '{{ error_message }}',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: '{% trans "OK" %}'
+        });
+    {% endif %}
+</script>
 </html>
