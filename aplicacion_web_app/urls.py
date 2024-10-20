@@ -9,6 +9,7 @@ urlpatterns = [
     path('index', views.index, name='index'),
     path('detections', views.detections, name='detections'),
     path('predicRansomware', views.predicRansomware, name='predicRansomware'),
+    path('excelDetail', views.excelDetail, name='excelDetail'),
     path('randomForest', RandomForest.randomForest, name='randomForest' ),
-    path('xgBoost', xgboosting.xgBoost, name='xgBoost')
+    path('xgBoost', xgboosting.xgBoost, name='xgBoost'),
 ]
