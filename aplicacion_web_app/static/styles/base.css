@@ -2,11 +2,12 @@
 body, .container-main{
     margin: 0;
     padding: 0;
-    height: 52.25rem;
 }
 
 .container-main{
     display: flex;
+    width: 100%;
+    height: max-content;
 }
 
 .container-navbar{
@@ -31,10 +32,8 @@ li{
 }
 
 .nav-item:last-child{
-    display: flex;
-    flex-direction: column;
-    margin-top: 35rem;
-    align-items: flex-end
+    margin-top: 37.25rem;
+    align-items: flex-end;
 }
 
 .nav-item i{

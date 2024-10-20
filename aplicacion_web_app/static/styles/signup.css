@@ -4,14 +4,18 @@ body{
 
 body, h2{
     margin:0;
+    padding: 0;
 }
 
 h1{
+    position: relative;
     margin: 0 0 .6rem 0;
 }
 
 h2{
-    width: 40%;
+    position: relative;
+    top: 2.6rem;
+    left: 1rem;
     font-size: 2rem;
 }
 
@@ -37,17 +41,18 @@ button{
 .main-container{
     display: flex;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
+    height: 47rem;
 }
 
 .left-container{
     background-color: #E9E8E9;
-    padding: 18.94rem 7rem;
+    padding: 23.8rem 10rem;
 }
 
 .right-container{
     background-color: #FAFAFA;
-    padding: 9.1rem  8rem;
+    padding: 12.8rem 9rem;
 }
 
 .login-form{
@@ -59,3 +64,14 @@ button{
     margin-bottom: 0;
 }
 
+.swal2-show {
+    animation: swal2-show .3s;
+    justify-items: center;
+}
+
+.swal2-confirm {
+    padding: 10px 43px 7px 19px;
+    font-size: 16px;
+    background-color: #3085d6;
+    border-radius: 5px;
+}
