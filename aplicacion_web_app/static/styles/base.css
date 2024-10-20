@@ -7,7 +7,7 @@ body, .container-main{
 .container-main{
     display: flex;
     width: 100%;
-    height: max-content;
+    height: 52.2rem;
 }
 
 .container-navbar{
