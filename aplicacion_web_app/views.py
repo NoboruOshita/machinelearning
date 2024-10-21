@@ -102,6 +102,10 @@ def detections(request):
     return render(request, 'appweb/detection/detection.html')
 
 @login_required
+def dashboard(request):
+    return render(request, 'appweb/dashboard/dashboard.html')
+
+@login_required
 def predicRansomware(request):
     '''
         - Verifica el IP (Black List) almacenada en la BD
