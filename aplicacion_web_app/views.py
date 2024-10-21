@@ -1,4 +1,5 @@
-from django.http import JsonResponse
+import json
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -15,6 +16,14 @@ import joblib
 import numpy as np
 import openpyxl
 import pandas as pd
+
+# VARIABLES GLOBALS
+important_features_rf = {}
+important_features_xgb = {}
+deviation_entropy = None
+deviation_size = None
+deviation_LBA = None
+
 def loginUser(request):
     '''
         - Login the User
@@ -102,6 +111,11 @@ def predicRansomware(request):
     xgbModel = joblib.load('xg_boost_model.pkl')
     label_encoder = joblib.load('label_encoder.pkl')
     
+    id_user = request.user.id
+    user_instance = auth_user.objects.get(id=id_user)
+    id_blacklist_id = None
+    print(type(request.user))
+    print('user_instance', user_instance)
     if request.method == 'POST':
         timestampS = request.POST.get('Timestamp_s')
         timestampMS = request.POST.get('Timestamp_ms')
@@ -115,14 +129,27 @@ def predicRansomware(request):
 
         # Verificar la ip de BD
         if IP != '' and blacklist.objects.filter(IP=IP).exists():
-            ransomwareType  = blacklist.objects.get(IP=IP).ransomware_type
+            blacklist_instance = blacklist.objects.get(IP=IP)
+            ransomwareType = blacklist_instance.ransomware_type
+            id_blacklist = blacklist_instance.id_blacklist
             predictedFinal = 100
             context = {'ransomware_type': ransomwareType,
                 'probability': predictedFinal,
                 'date': date
             }
-            return render(request,'appweb/detection/detection.html',context)
 
+            # Storage in DB
+            saveDataRansomware(
+                id_user_id=user_instance, 
+                id_blacklist_id=blacklist_instance,
+                timestamp_s=timestampS, 
+                timestamp_ms=timestampMS, 
+                lba=LBA, 
+                block_size=size, 
+                entropy_shannon=entropy
+            )            
+            return render(request,'appweb/detection/detection.html',context)
+             
         # Verificar que todos los campos estén llenos
         if not (timestampS and timestampMS and LBA and size and entropy):
             context = {"error_message": _("Tienes que completar todos los campos.")}
@@ -169,6 +196,7 @@ def predicRansomware(request):
                 "La entropía (Entropy) influyó un Y% en la predicción debido a la alta dispersión observada".
         '''
         # Importancia de características de Random Forest 
+        global important_features_rf
         rfFeatureImportances = rfModel.feature_importances_
         important_features_rf = {
             "Entropy": round(rfFeatureImportances[4] * 100, 2),
@@ -177,6 +205,7 @@ def predicRansomware(request):
         }
 
         # Feature importances for XGB
+        global important_features_xgb
         xgbFeatureImportances = xgbModel.feature_importances_
         important_features_xgb = {
             "Entropy": round(xgbFeatureImportances[4] * 100, 2),
@@ -192,6 +221,7 @@ def predicRansomware(request):
             "La entropía observada es un Z% mayor que el promedio de los archivos normales, lo que contribuye a la alta probabilidad de ransomware".
         '''
         # Analyze deviations (anomalies)
+        global deviation_entropy, deviation_size, deviation_LBA
         deviation_entropy = round(abs(entropy - 0.95) * 100, 2)  # 0.95 as average entropy threshold
         deviation_size = round(abs(size - 1024) / 100, 2) # 1024 as a threshold for block size
         deviation_LBA = round(abs(LBA - 600000), 2)  # LBA threshold
@@ -212,8 +242,14 @@ def predicRansomware(request):
         if predictedFinal > 50:
             features = {'entropy': entropy, 'size': size, 'LBA': LBA}
             mensaje, motive = responseRansomware(predictedFinal, features)
+            # Storage in DB
+            data_ransomware_instance =saveDataRansomware(id_user_id=user_instance, id_blacklist_id=None, timestamp_s=timestampS, timestamp_ms=timestampMS, lba=LBA, block_size=size, entropy_shannon=entropy)
         else:
             motive = _('Sin respuesta contra la amenaza')
+        
+        detection_instance = saveDetection(int(data_ransomware_instance), ransomwareType, predictedFinal, date)
+        response_instance = saveResponse (int(detection_instance), motive,date)
+        log(int(detection_instance),int(response_instance))
         
         print (important_features_rf, '-', important_features_xgb, '-', deviation_entropy, '-', deviation_size, '-', deviation_LBA)
         context = {
@@ -253,7 +289,95 @@ def responseRansomware(predictedFinal, features):
     
     return mensaje, motivos
 
+# Storages in DataBase
+def saveDataRansomware(id_user_id, id_blacklist_id, timestamp_s, timestamp_ms, lba, block_size, entropy_shannon):
+    data = data_ransomware(
+        id_user = id_user_id,
+        timestamp_s= timestamp_s,
+        timestamp_ms= timestamp_ms,
+        lba = lba,
+        block_size = block_size,
+        entropy_shannon = entropy_shannon
+    )
+
+    if id_blacklist_id:
+        data = data_ransomware(
+            id_user = id_user_id,
+            id_blacklist = id_blacklist_id,
+            timestamp_s= None,
+            timestamp_ms= None,
+            lba = None,
+            block_size = None,
+            entropy_shannon = None
+        )
+    
+    data.save()
+
+    return data.id_data_ransomware
+
+def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date):
+    ransomware_detected = data_ransomware_instance is not None
+    if predictedFinal < 50: ransomwareType = None
+    date = datetime.strptime(date, '%m/%d/%Y').date()
+    data = detection(
+        id_data_ransomware=data_ransomware.objects.get(id_data_ransomware=data_ransomware_instance),
+        ransomware_detected=ransomware_detected,
+        ransomware_type=ransomwareType,
+        percentage_reliability=predictedFinal,
+        detection_date=date
+    )
+    data.save()
+
+    return data.id_detection
+
+def saveResponse(detection_instance, motive, date):
+    date = datetime.strptime(date, '%m/%d/%Y').date()
+    action = "cuarentena" if motive else None
+    detail = ','.join(motive).replace(',', '.')
+    data = response(
+        id_detection=detection.objects.get(id_detection=detection_instance),
+        action=action,
+        detail=detail,
+        response_date= date
+    )
+    data.save()
+    
+    return data.id_response
+
+def log(detection_instance, response_instance):
+    log = logs(
+        id_detection=detection.objects.get(id_detection=detection_instance),
+        id_response=response.objects.get(id_response=response_instance)
+    )
+    log.save()
+
 @login_required
-def excelDetail():
+def excelDetail(request):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
+    entityName = {
+        "IFRF" : _("Características importantes del bosque aleatorio") ,
+        'IFXGB': _("Características Importantes de Extreme Gradient Boosting"),
+        'Deviation Entropy': _("Desviación de Entropía"),
+        'Deviation size': _("Desviación de Tamaño"),
+        'Deviation LBA': _("Desviacion de Dirección de bloque lógico")
+    }
+    global important_features_rf, important_features_xgb, deviation_size, deviation_LBA, deviation_entropy
+    # ORDENAR LOS DATOS (PENDIENTE)
+    data = [
+        [entityName['IFRF'], entityName['IFXGB'], entityName['Deviation size'], entityName['Deviation LBA'], entityName['Deviation Entropy']],
+        [important_features_rf.get('Entropy', 'No disponible'), important_features_xgb.get('Entropy', 'No disponible'), deviation_size, deviation_LBA, deviation_entropy]
+    ]
+    print("DATA", data)
+    for row in data:
+        sheet.append(row)
+    
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = _("Detalle del resultado") + ".xlsx"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    workbook.save(response)
+
+    print("¡Archivo Excel creado exitosamente!")
+
+    return response
+    
