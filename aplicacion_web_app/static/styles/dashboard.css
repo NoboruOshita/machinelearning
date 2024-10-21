@@ -1,0 +1,17 @@
+.container__dashboard-main{
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    grid-template-columns: repeat(2, 2fr);
+    grid-auto-rows: 100px;
+    column-gap: 16px;
+}
+
+.flow-graph, .pie-chart, .table-event{
+    background-color: white;
+    text-align: center;
+    color: #464255;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+}

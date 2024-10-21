@@ -2,7 +2,23 @@
 {% load static %}
 {% block content %}
 {% load i18n %}
+<head>
+    <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
+</head>
+<div class="container__dashboard-main">
+    <div class="container__dashboard__graph">
+        <div class="flow-graph">
+            <h2>{% trans "Flujo de Reales Positivos" %}</h2>
+        </div>
+        <div class="pie-chart">
+            <h2>{% trans "Grafica de Ransomware Maligno y Benigno" %}</h2>
+        </div>
+    </div>
+    <div class="container__dashboard__table">
+        <div class="table-event">
+            <h2>{% trans "Eventos registrados" %}</h2>
+        </div>
+    </div>
+</div>
 
-<h1>dashboard</h1>
-
-{% endblock %}
+{% endblock %}
