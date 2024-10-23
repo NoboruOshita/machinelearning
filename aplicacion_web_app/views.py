@@ -18,11 +18,20 @@ import openpyxl
 import pandas as pd
 
 # VARIABLES GLOBALS
-important_features_rf = {}
-important_features_xgb = {}
 deviation_entropy = None
 deviation_size = None
 deviation_LBA = None
+predictedProbabilityRF = None
+predictedProbabilityXGB = None
+
+resultStorage = {
+    'ransomware_type' : [],
+    'predictedProbabilityRF': [],
+    'predictedProbabilityXGB': [],
+    'deviation_entropy': [],
+    'deviation_size': [],
+    'deviation_LBA': []
+}
 
 def loginUser(request):
     '''
@@ -180,6 +189,7 @@ def predicRansomware(request):
         Ejemplo:
             "Random Forest estima una probabilidad de detección del X%, mientras que XGBoost estima una probabilidad del Y%".
         '''
+        global predictedProbabilityRF, predictedProbabilityXGB
         # Prediction Model Random Forest
         probabilitiesRF = rfModel.predict_proba(inputData)
         predictedProbabilityRF = np.max(probabilitiesRF) * 100
@@ -190,32 +200,6 @@ def predicRansomware(request):
         predictedProbabilityXGB = np.max(probabilitiesXGB) * 100
         preTypeRansomwareXGB = xgbModel.predict(inputData)
         typeRansomwareXGB = label_encoder.inverse_transform(preTypeRansomwareXGB)
-        
-        '''
-        Contribución de características:
-            Explicación de la metrica:
-                La importancia de características del modelo de Random Forest y Extreme Gradient Boosting es para mostrar al usuario la predicción. Esto quiere decir lo que muestra es qué características (entropía, tamaño del bloque, LBA) tuvieron más peso en la predicción, lo que permite proporcionar al usuario una explicación cuantitativa del porcentaje.
-            Ejemplo:
-                "El tamaño del bloque (Size) contribuyó un X% en la decisión final debido a su valor elevado".
-                "La entropía (Entropy) influyó un Y% en la predicción debido a la alta dispersión observada".
-        '''
-        # Importancia de características de Random Forest 
-        global important_features_rf
-        rfFeatureImportances = rfModel.feature_importances_
-        important_features_rf = {
-            "Entropy": round(rfFeatureImportances[4] * 100, 2),
-            "Size": round(rfFeatureImportances[3] * 100, 2),
-            "LBA": round(rfFeatureImportances[2] * 100, 2)
-        }
-
-        # Feature importances for XGB
-        global important_features_xgb
-        xgbFeatureImportances = xgbModel.feature_importances_
-        important_features_xgb = {
-            "Entropy": round(xgbFeatureImportances[4] * 100, 2),
-            "Size": round(xgbFeatureImportances[3] * 100, 2),
-            "LBA": round(xgbFeatureImportances[2] * 100, 2)
-        }
 
         '''
         Desviación o anomalía en las características:
@@ -243,7 +227,7 @@ def predicRansomware(request):
             predictedFinal = round(predictedProbabilityXGB, 2)
 
         # Evaluate final confidence and response
-        if predictedFinal > 50:
+        if predictedFinal > 70:
             features = {'entropy': entropy, 'size': size, 'LBA': LBA}
             mensaje, motive = responseRansomware(predictedFinal, features)
             # Storage in DB
@@ -255,14 +239,22 @@ def predicRansomware(request):
         response_instance = saveResponse (int(detection_instance), motive,date)
         log(int(detection_instance),int(response_instance))
         
-        print (important_features_rf, '-', important_features_xgb, '-', deviation_entropy, '-', deviation_size, '-', deviation_LBA)
+        ransomwareType = ransomwareType if predictedFinal > 70 else ""
+        global resultStorage
+        resultStorage['ransomware_type'].append(ransomwareType)
+        resultStorage['predictedProbabilityRF'].append(predictedProbabilityRF)
+        resultStorage['predictedProbabilityXGB'].append(predictedProbabilityXGB)
+        resultStorage['deviation_entropy'].append(deviation_entropy)
+        resultStorage['deviation_size'].append(deviation_size)
+        resultStorage['deviation_LBA'].append(deviation_LBA)
+
         context = {
             'ransomware_type': ransomwareType,
             'probability': predictedFinal,
             'date': date,
             'motive': motive,
-            'important_features_rf': important_features_rf,
-            'important_features_xgb': important_features_xgb,
+            'predictedProbabilityRF': round(predictedProbabilityRF,2),
+            'predictedProbabilityXGB': round(predictedProbabilityXGB,2),
             'deviation_entropy': deviation_entropy,
             'deviation_size': deviation_size,
             'deviation_LBA': deviation_LBA
@@ -337,7 +329,7 @@ def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date
 def saveResponse(detection_instance, motive, date):
     date = datetime.strptime(date, '%m/%d/%Y').date()
     action = "cuarentena" if motive else None
-    detail = ','.join(motive).replace(',', '.')
+    detail = ','.join(motive).replace(',', '. ')
     data = response(
         id_detection=detection.objects.get(id_detection=detection_instance),
         action=action,
@@ -357,25 +349,50 @@ def log(detection_instance, response_instance):
 
 @login_required
 def excelDetail(request):
+    date = datetime.today()
+    formatDate = datetime.strftime(date, '%d/%m/%y')
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     entityName = {
-        "IFRF" : _("Características importantes del bosque aleatorio") ,
-        'IFXGB': _("Características Importantes de Extreme Gradient Boosting"),
         'Deviation Entropy': _("Desviación de Entropía"),
         'Deviation size': _("Desviación de Tamaño"),
         'Deviation LBA': _("Desviacion de Dirección de bloque lógico")
     }
-    global important_features_rf, important_features_xgb, deviation_size, deviation_LBA, deviation_entropy
-    # ORDENAR LOS DATOS (PENDIENTE)
-    data = [
-        [entityName['IFRF'], entityName['IFXGB'], entityName['Deviation size'], entityName['Deviation LBA'], entityName['Deviation Entropy']],
-        [important_features_rf.get('Entropy', 'No disponible'), important_features_xgb.get('Entropy', 'No disponible'), deviation_size, deviation_LBA, deviation_entropy]
+    global resultStorage, deviation_size, deviation_LBA, deviation_entropy
+
+    # Column headings
+    headers = [
+        _("Fecha"),
+        _("Ransomware"),
+        _("Probabilidad de predicción de Random Forest"), 
+        _("Probalidad de predicción de XGBoost"), 
+        entityName['Deviation size'], 
+        entityName['Deviation LBA'], 
+        entityName['Deviation Entropy'],
     ]
-    print("DATA", data)
-    for row in data:
+
+    # Add headers to Excel 
+    sheet.append(headers)
+    
+    # Add the date to each row of data 
+    rows = [] 
+    for i in range(len(resultStorage['predictedProbabilityRF'])): 
+        # Add the data for each “input” to a row 
+        row = [ formatDate,
+               resultStorage['ransomware_type'][i],
+               resultStorage['predictedProbabilityRF'][i], 
+               resultStorage['predictedProbabilityXGB'][i],
+               resultStorage['deviation_size'][i], 
+               resultStorage['deviation_LBA'][i], 
+               resultStorage['deviation_entropy'][i] ] 
+        # Add the row to the row list 
+        rows. append(row) 
+    
+    # Add all rows to Excel.
+    for row in rows:
         sheet.append(row)
     
+
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     filename = _("Detalle del resultado") + ".xlsx"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
@@ -383,5 +400,9 @@ def excelDetail(request):
 
     print("¡Archivo Excel creado exitosamente!")
 
+    #Clear resultStorage
+    for key in resultStorage:
+        resultStorage[key].clear()
+        
     return response
     
