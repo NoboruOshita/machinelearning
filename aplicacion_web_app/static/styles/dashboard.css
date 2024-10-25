@@ -1,9 +1,62 @@
+body{
+    font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+h2, p, input{
+  margin: 0;
+  padding: 0;
+}
+
+input{
+    width: 8.5rem;
+    padding: 3px;
+    border: 1px solid #D0D5DD;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 16px;
+}
+
+h2{
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+p{
+    text-align: left;
+    font-size: 16px;
+    font-weight: 100;
+}
+
+button{
+    border: 1px solid;
+    border-radius: 10px;
+    color: #2D9CDB;
+    background-color: white;
+    font-size: 16px;
+    padding: 8px;
+}
+
+button:hover{
+    cursor: pointer;
+    transform: translateY(-1.5px) scale(1.05);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.bi-download{
+    color: #2D9CDB;
+}
+
+.input__date{
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
 .container__dashboard-main{
     display: grid;
     align-items: center;
     justify-items: center;
     grid-template-columns: repeat(2, 2fr);
-    grid-auto-rows: 100px;
     column-gap: 16px;
 }
 
@@ -14,4 +67,12 @@
     border: none;
     border-radius: 4px;
     font-weight: bold;
+    padding: 1rem;
+}
+
+.container__dashboard__graph{
+    display: flex;
+    flex-direction: column;
+    row-gap: 7px;
+    justify-content: space-around;
 }

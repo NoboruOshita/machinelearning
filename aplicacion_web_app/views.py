@@ -148,7 +148,8 @@ def predicRansomware(request):
             predictedFinal = 100
             context = {'ransomware_type': ransomwareType,
                 'probability': predictedFinal,
-                'date': date
+                'date': date,
+                'motive':  [_("La ip se encuentra dentro del backlist")]
             }
 
             # Storage in DB
@@ -351,6 +352,7 @@ def log(detection_instance, response_instance):
 def excelDetail(request):
     date = datetime.today()
     formatDate = datetime.strftime(date, '%d/%m/%y')
+    formatHours = datetime.now().strftime("%H:%M:%S")
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     entityName = {
@@ -363,6 +365,7 @@ def excelDetail(request):
     # Column headings
     headers = [
         _("Fecha"),
+        _("Hora"),
         _("Ransomware"),
         _("Probabilidad de predicción de Random Forest"), 
         _("Probalidad de predicción de XGBoost"), 
@@ -379,6 +382,7 @@ def excelDetail(request):
     for i in range(len(resultStorage['predictedProbabilityRF'])): 
         # Add the data for each “input” to a row 
         row = [ formatDate,
+               formatHours,
                resultStorage['ransomware_type'][i],
                resultStorage['predictedProbabilityRF'][i], 
                resultStorage['predictedProbabilityXGB'][i],

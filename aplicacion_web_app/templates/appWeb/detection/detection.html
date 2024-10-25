@@ -48,9 +48,9 @@
 
     <div class="content-detection-response">
         <div class="content-response-result">
-            {% if ransomware_type and probability >= 50 and ransomware_type != None and probability != None %}
+            {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
             <h3>{% trans "Respuesta de Mitgación" %}</h3>
-            <p>{% trans "El documento fue puesto en cuarentena por los siguientes motivos:" %}</p>
+            <p>{% trans "El proceso fue mitigado existosamente, por los siguientes motivos:" %}</p>
             <ul>
                 {% for reason in motive %}
                 <p>- {{ reason }}</p>
@@ -59,7 +59,7 @@
             {% endif %}
         </div>
         <div class="content-detection-result">
-            {% if ransomware_type and probability >= 50 and ransomware_type != None and probability != None %}
+            {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
             <h3>{% trans "Resultado de Detección" %}</h3>
             <p>{% trans "El tipo de ransomware detectado:" %}<strong style="color: red;">{{ ransomware_type }} </strong></p>
             <p>{% trans "Porcentaje de confiabilidad de un posibles ransomware" %}</p>
@@ -79,22 +79,16 @@
             <span class="modal-close">&times;</span>
             <div class="modal-header">{% trans "Detalle del resultado" %}</div>
             <div class="modal-body">
-                <p>{% trans "Se detallan las características importantes y las desviaciones:" %}</p>
-    
-                <h4>{% trans "Características Importantes (Random Forest):" %}</h4>
-                <p>{% trans "Entropía:" %} <span id="important_features_rf_entropy">{{ important_features_rf.Entropy }}%</span></p>
-                <p>{% trans "Tamaño:" %} <span id="important_features_rf_size">{{ important_features_rf.Size }}%</span></p>
-                <p>{% trans "LBA:" %} <span id="important_features_rf_LBA">{{ important_features_rf.LBA }}%</span></p>
-    
-                <h4>{% trans "Características Importantes (XGBoost):" %}</h4>
-                <p>{% trans "Entropía:" %} <span id="important_features_xgb_entropy">{{ important_features_xgb.Entropy }}%</span></p>
-                <p>{% trans "Tamaño:" %} <span id="important_features_xgb_size">{{ important_features_xgb.Size }}%</span></p>
-                <p>{% trans "LBA:" %} <span id="important_features_xgb_LBA">{{ important_features_xgb.LBA }}%</span></p>
-    
-                <h4>{% trans "Desviaciones de las Características:" %}</h4>
-                <p>{% trans "Desviación de Entropía:" %} <span id="deviation_entropy">{{ deviation_entropy }}%</span></p>
-                <p>{% trans "Desviación de Tamaño:" %} <span id="deviation_size">{{ deviation_size }}%</span></p>
-                <p>{% trans "Desviación de LBA:" %} <span id="deviation_LBA">{{ deviation_LBA }}%</span></p>
+                <p>{% trans "Se detallan las precisiones, características importantes y las desviaciones:" %}</p>
+                <h4>{% trans "PRECISIONES:" %}</h4>
+                <p>{% trans "- Random Forest:" %}<span id="predictedProbabilityRF"> {{ predictedProbabilityRF }}%</span>&nbsp;<i class="bi bi-question-circle" width="14px" data-toggle="tooltip" data-placement="top" title="{% trans 'Estimación de probabilidad de detección del modelo Random Forest' %}"></i></p>
+                <p>{% trans "- XGBoost:" %}<span id="predictedProbabilityXGB"> {{ predictedProbabilityXGB }}%</span>&nbsp;<i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'Estimación de probabilidad de detección del modelo Extreme Gradient Boosting' %}"></i></p>
+
+                <h4>{% trans "DESVIACIONES DE LAS CARACTERISTICAS:" %}</h4>
+                <p>{% trans "- Desviación de Entropía:" %} <span id="deviation_entropy">{{ deviation_entropy }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de entropía mide la diferencia en la distribución de la información.' %}"></i></p>
+                <p>{% trans "- Desviación de Tamaño:" %} <span id="deviation_size">{{ deviation_size }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de tamaño se refiere a la diferencia en el tamaño de los archivos.' %}"></i></p>
+                <p>{% trans "- Desviación de LBA:" %} <span id="deviation_LBA">{{ deviation_LBA }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de LBA mide la diferencia en la ubicación lógica de los bloques de datos.' %}"></i></p>
+                
             </div>
             <div class="modal-footer">
                 <a href="{% url 'excelDetail' %}">{% trans "Descargar detalles" %}</a>
