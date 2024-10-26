@@ -4,6 +4,7 @@
 {% load i18n %}
 <head>
     <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <div class="container__dashboard-main">
     <div class="container__dashboard__graph">
@@ -12,12 +13,14 @@
                 <div class="input__date">
                     <div>
                         <p>{% trans "Periodo de tiempo" %}</p>
-                        <input type="date" name="dateFlowGraph" id="dateFlowGraph">
+                        <input type="date" name="start_date" id="dateFlowGraph" value="{{ start_date }}">
                     </div>
                     <div>
                         <button type="submit"><i class="bi bi-download">&nbsp;&nbsp;&nbsp;</i>{% trans "Descargar Reporte" %}</button>
                     </div>
                 </div>
+                <!-- Gráfico de flujo -->
+            <canvas id="flowChart" width="680" height="290"></canvas>
         </div>
         <div class="pie-chart">
                 <h2>{% trans "Grafica de Ransomware Maligno y Benigno" %}</h2>
@@ -41,4 +44,66 @@
     </div>
 </div>
 
+<script>
+    const data = {{ data|safe }};
+    
+    const ctx = document.getElementById('flowChart').getContext('2d');
+    const flowChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Real positivo',
+                data: data.counts,
+                borderColor: 'rgba(0, 123, 255, 0.6)',
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                pointBackgroundColor: 'rgba(0, 123, 255, 1)',
+                pointBorderColor: 'rgba(0, 123, 255, 0.6)',
+                pointHoverRadius: 6,
+                pointRadius: 4,
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Días'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cantidad'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#333',
+                    bodyColor: '#333',
+                    borderColor: 'rgba(0, 123, 255, 0.8)',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 4,
+                    callbacks: {
+                        title: function(tooltipItem) {
+                            return 'Fecha: ' + tooltipItem[0].label;
+                        },
+                        label: function(tooltipItem) {
+                            return 'Real positivo: ' + tooltipItem.raw;
+                        }
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

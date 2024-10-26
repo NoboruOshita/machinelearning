@@ -48,8 +48,8 @@ button:hover{
 
 .input__date{
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    justify-content: space-around;
+    gap: 11rem;
 }
 
 .container__dashboard-main{

@@ -17,6 +17,8 @@ import numpy as np
 import openpyxl
 import pandas as pd
 
+from django.db.models import Count
+from django.utils.timezone import now, timedelta
 # VARIABLES GLOBALS
 deviation_entropy = None
 deviation_size = None
@@ -112,7 +114,30 @@ def detections(request):
 
 @login_required
 def dashboard(request):
-    return render(request, 'appweb/dashboard/dashboard.html')
+    end_date = now().date()
+    start_date = end_date - timedelta(weeks=4)
+    
+    # Verificar si el usuario ha especificado una fecha "Desde"
+    selected_start = request.GET.get('start_date')
+    
+    if selected_start:
+        start_date = datetime.strptime(selected_start, '%Y-%m-%d').date()
+
+    # Consulta para contar los reales positivos agrupados por día en el rango de fechas
+    real_positive_data = (
+        response.objects
+        .filter(response_date__range=(start_date, end_date))
+        .values('response_date')
+        .annotate(count=Count('id_response'))
+        .order_by('response_date')
+    )
+
+    # Formatear los datos para el gráfico
+    data = {
+        'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_data],
+        'counts': [item['count'] for item in real_positive_data],
+    }
+    return render(request, 'appweb/dashboard/dashboard.html', {'data': data, 'start_date': start_date})
 
 @login_required
 def predicRansomware(request):
@@ -409,4 +434,3 @@ def excelDetail(request):
         resultStorage[key].clear()
         
     return response
-    
