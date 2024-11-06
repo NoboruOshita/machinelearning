@@ -127,5 +127,12 @@ def randomForest(request):
 
     # Plot the learning curves
     learningCurves(model, X_train, y_train, X_test, y_test)
+    response = {
+        'message': 'Model trained of Random Forest!',
+        'Accuracy': test_accuracy,
+        'Precision': test_precision,
+        'Recall': test_recall,
+        'F1 Score': test_f1,
+    }
     joblib.dump(model, 'random_forest_model.pkl')
-    return JsonResponse({'message': 'File processed successfully'},status=200)
+    return JsonResponse({'message': response},status=200)

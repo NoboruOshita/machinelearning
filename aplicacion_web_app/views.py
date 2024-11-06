@@ -15,6 +15,7 @@ from datetime import datetime
 import joblib
 import numpy as np
 import openpyxl
+from openpyxl.styles import Alignment, Font
 import pandas as pd
 
 from django.db.models import Count
@@ -25,6 +26,8 @@ deviation_size = None
 deviation_LBA = None
 predictedProbabilityRF = None
 predictedProbabilityXGB = None
+selected_start = None
+selected_end = None
 
 resultStorage = {
     'ransomware_type' : [],
@@ -114,19 +117,30 @@ def detections(request):
 
 @login_required
 def dashboard(request):
-    end_date = now().date()
-    start_date = end_date - timedelta(weeks=4)
+    endDate = now().date()
+    startDate = endDate - timedelta(weeks=4)
     
-    # Verificar si el usuario ha especificado una fecha "Desde"
-    selected_start = request.GET.get('start_date')
+    # Verificar si el usuario ha especificado fechas "Desde" y "Hasta"
+    global selected_start, selected_end
+    selected_start = request.GET.get('startDate')
+    selected_end = request.GET.get('endDate')
     
-    if selected_start:
-        start_date = datetime.strptime(selected_start, '%Y-%m-%d').date()
+    if 'limpiar_filtro' in request.GET:
+        # Limpiar el filtro, usar el rango de las últimas 4 semanas
+        startDate = endDate - timedelta(weeks=4)
+    else:
+        if selected_start:
+            startDate = datetime.strptime(selected_start, '%Y-%m-%d').date()
+        if selected_end:
+            endDate = datetime.strptime(selected_end, '%Y-%m-%d').date()
+        # Asegurar de que endDate sea igual o posterior a startDate
+        if startDate > endDate:
+            endDate = startDate
 
-    # Consulta para contar los reales positivos agrupados por día en el rango de fechas
+    # Query para contar los reales positivos agrupados por día en el rango de fechas
     real_positive_data = (
         response.objects
-        .filter(response_date__range=(start_date, end_date))
+        .filter(response_date__range=(startDate, endDate))
         .values('response_date')
         .annotate(count=Count('id_response'))
         .order_by('response_date')
@@ -137,7 +151,13 @@ def dashboard(request):
         'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_data],
         'counts': [item['count'] for item in real_positive_data],
     }
-    return render(request, 'appweb/dashboard/dashboard.html', {'data': data, 'start_date': start_date})
+
+    context = {
+        'data': data,
+        'startDate': startDate,
+        'endDate': endDate,
+    }
+    return render(request, 'appweb/dashboard/dashboard.html', context)
 
 @login_required
 def predicRansomware(request):
@@ -253,15 +273,18 @@ def predicRansomware(request):
             predictedFinal = round(predictedProbabilityXGB, 2)
 
         # Evaluate final confidence and response
-        if predictedFinal > 70:
-            features = {'entropy': entropy, 'size': size, 'LBA': LBA}
-            mensaje, motive = responseRansomware(predictedFinal, features)
-            # Storage in DB
-            data_ransomware_instance =saveDataRansomware(id_user_id=user_instance, id_blacklist_id=None, timestamp_s=timestampS, timestamp_ms=timestampMS, lba=LBA, block_size=size, entropy_shannon=entropy)
-        else:
-            motive = _('Sin respuesta contra la amenaza')
+        data_ransomware_instance = None
+        detection_instance = None
+        response_instance = None
+
+        features = {'entropy': entropy, 'size': size, 'LBA': LBA}
+        mensaje, motive = responseRansomware(predictedFinal, features)
         
+        # Storage in DB
+        data_ransomware_instance =saveDataRansomware(id_user_id=user_instance, id_blacklist_id=None, timestamp_s=timestampS, timestamp_ms=timestampMS, lba=LBA, block_size=size, entropy_shannon=entropy)
         detection_instance = saveDetection(int(data_ransomware_instance), ransomwareType, predictedFinal, date)
+
+        if predictedFinal < 70:  motive = None
         response_instance = saveResponse (int(detection_instance), motive,date)
         log(int(detection_instance),int(response_instance))
         
@@ -274,6 +297,7 @@ def predicRansomware(request):
         resultStorage['deviation_size'].append(deviation_size)
         resultStorage['deviation_LBA'].append(deviation_LBA)
 
+        if predictedFinal < 70: motive = _('Sin respuesta contra la amenaza')
         context = {
             'ransomware_type': ransomwareType,
             'probability': predictedFinal,
@@ -313,33 +337,26 @@ def responseRansomware(predictedFinal, features):
 
 # Storages in DataBase
 def saveDataRansomware(id_user_id, id_blacklist_id, timestamp_s, timestamp_ms, lba, block_size, entropy_shannon):
-    data = data_ransomware(
-        id_user = id_user_id,
-        timestamp_s= timestamp_s,
-        timestamp_ms= timestamp_ms,
-        lba = lba,
-        block_size = block_size,
-        entropy_shannon = entropy_shannon
-    )
-
-    if id_blacklist_id:
+    try:
         data = data_ransomware(
-            id_user = id_user_id,
-            id_blacklist = id_blacklist_id,
-            timestamp_s= None,
-            timestamp_ms= None,
-            lba = None,
-            block_size = None,
-            entropy_shannon = None
+            id_user=id_user_id,
+            id_blacklist=id_blacklist_id,
+            timestamp_s=timestamp_s,
+            timestamp_ms=timestamp_ms,
+            lba=lba,
+            block_size=block_size,
+            entropy_shannon=entropy_shannon
         )
-    
-    data.save()
-
-    return data.id_data_ransomware
+        
+        data.save()
+        return data.id_data_ransomware
+    except Exception as e:
+        print("Error al guardar en data_ransomware:", e)
+        return None
 
 def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date):
     ransomware_detected = data_ransomware_instance is not None
-    if predictedFinal < 50: ransomwareType = None
+    if predictedFinal < 70: ransomwareType = None
     date = datetime.strptime(date, '%m/%d/%Y').date()
     data = detection(
         id_data_ransomware=data_ransomware.objects.get(id_data_ransomware=data_ransomware_instance),
@@ -354,8 +371,12 @@ def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date
 
 def saveResponse(detection_instance, motive, date):
     date = datetime.strptime(date, '%m/%d/%Y').date()
-    action = "cuarentena" if motive else None
-    detail = ','.join(motive).replace(',', '. ')
+    action = "Cuarentena" if motive != None else None
+    if action == None: 
+        detail = 'Ninguna'
+        action = 'Ransomware no detectado'
+    else:
+        detail = ','.join(motive).replace(',', '. ')
     data = response(
         id_detection=detection.objects.get(id_detection=detection_instance),
         action=action,
@@ -434,3 +455,55 @@ def excelDetail(request):
         resultStorage[key].clear()
         
     return response
+
+def getExcelflowChart(request):
+    global selected_start, selected_end
+
+    # Check and convert selected dates
+    if selected_start and selected_end:
+        start_date = datetime.strptime(selected_start, '%Y-%m-%d').date()
+        end_date = datetime.strptime(selected_end, '%Y-%m-%d').date()
+    else:
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(weeks=4)
+    
+    # Query the data in the date range
+    real_positive_data = (
+        response.objects
+        .filter(response_date__range=(start_date, end_date))
+        .values('response_date', 'action', 'detail')
+        .annotate(count=Count('id_response'))
+        .order_by('response_date')
+    )
+
+    # Create a new Excel workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = _("Reporte de Reales Positivos")
+
+    # Set headers
+    headers = ["Fecha", "Cantidad de Ransomware Detectados", "Acción Tomada", "Detalles"]
+    ws.append(headers)
+
+    # Formatting headers
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center")
+
+    # Filling in the data in the Excel file
+    for record in real_positive_data:
+        ws.append([
+            record['response_date'].strftime('%d/%m/%Y'),
+            record['count'],  # Number of ransomware detected
+            record['action'], # Action taken
+            record['detail']   # Details
+        ])
+
+    # Configurar la respuesta HTTP para la descarga de archivo
+    responses = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    responses['Content-Disposition'] = f'attachment; filename="reporte_reales_positivos_{start_date}_a_{end_date}.xlsx"'
+
+    # Save the file in the HTTP response
+    wb.save(responses)
+
+    return responses

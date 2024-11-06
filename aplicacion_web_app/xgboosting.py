@@ -116,16 +116,15 @@ def xgBoost(request):
 
     # Return a response with metrics
     response = {
-        'message': 'Model trained!',
+        'message': 'Model trained of XGBoost!',
         'Accuracy': accuracy,
         'Precision': precision,
         'Recall': recall,
         'F1 Score': f1,
-        'Cross-Validated Accuracy': cross_val_acc
     }
 
     # Call learning curves function
     learningCurves(xgb_model, X_train, y_train, X_test, y_test)
     joblib.dump(xgb_model, 'xg_boost_model.pkl')
     joblib.dump(label_encoder, 'label_encoder.pkl')
-    return JsonResponse(response)
+    return JsonResponse({'message': response},status=200)

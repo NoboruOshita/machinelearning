@@ -11,6 +11,7 @@ urlpatterns = [
     path('dashboard', views.dashboard, name='dashboard'),
     path('predicRansomware', views.predicRansomware, name='predicRansomware'),
     path('excelDetail', views.excelDetail, name='excelDetail'),
+    path('getExcelflowChart', views.getExcelflowChart, name="getExcelflowChart"),
     path('randomForest', RandomForest.randomForest, name='randomForest' ),
     path('xgBoost', xgboosting.xgBoost, name='xgBoost'),
 ]
