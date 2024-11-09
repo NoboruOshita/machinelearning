@@ -1,4 +1,3 @@
-import json
 from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
@@ -8,18 +7,19 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.contrib import messages
 from . models import *
 from datetime import datetime
+from openpyxl.styles import Alignment, Font
+from django.db.models import Count, Q
+from django.utils.timezone import now, timedelta
 
 import joblib
 import numpy as np
 import openpyxl
-from openpyxl.styles import Alignment, Font
 import pandas as pd
-
-from django.db.models import Count
-from django.utils.timezone import now, timedelta
+import json
 # VARIABLES GLOBALS
 deviation_entropy = None
 deviation_size = None
@@ -117,27 +117,45 @@ def detections(request):
 
 @login_required
 def dashboard(request):
+    # Rango de fecha por defecto para las otras gráficas
     endDate = now().date()
     startDate = endDate - timedelta(weeks=4)
     
-    # Verificar si el usuario ha especificado fechas "Desde" y "Hasta"
-    global selected_start, selected_end
+    # Verificar si el usuario ha especificado fechas para las otras gráficas
     selected_start = request.GET.get('startDate')
     selected_end = request.GET.get('endDate')
     
     if 'limpiar_filtro' in request.GET:
-        # Limpiar el filtro, usar el rango de las últimas 4 semanas
         startDate = endDate - timedelta(weeks=4)
     else:
         if selected_start:
             startDate = datetime.strptime(selected_start, '%Y-%m-%d').date()
         if selected_end:
             endDate = datetime.strptime(selected_end, '%Y-%m-%d').date()
-        # Asegurar de que endDate sea igual o posterior a startDate
         if startDate > endDate:
             endDate = startDate
 
-    # Query para contar los reales positivos agrupados por día en el rango de fechas
+    # Filtro para la gráfica de anillo (solo necesita una fecha de inicio)
+    start_date_pie_chart = request.GET.get('start_date_pie_chart')
+    if 'limpiar_filtro_pie_chart' in request.GET or not start_date_pie_chart:
+        start_date_pie_chart = endDate - timedelta(weeks=4)  # Valor por defecto
+    else:
+        start_date_pie_chart = datetime.strptime(start_date_pie_chart, '%Y-%m-%d').date()
+
+    # Consulta para la gráfica de anillo basada en la fecha de inicio especificada
+    total_responses = response.objects.filter(response_date__gte=start_date_pie_chart).count()
+    maligna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="cuarentena").count()
+    benigna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ninguna").count()
+
+    # Calcular el porcentaje para la gráfica de anillo
+    maligna_percentage = (maligna_count / total_responses) * 100 if total_responses > 0 else 0
+    benigna_percentage = (benigna_count / total_responses) * 100 if total_responses > 0 else 0
+    pie_data = {
+        'maligna': round(maligna_percentage, 2),
+        'benigna': round(benigna_percentage, 2),
+    }
+
+    # Datos para las otras gráficas
     real_positive_data = (
         response.objects
         .filter(response_date__range=(startDate, endDate))
@@ -145,18 +163,27 @@ def dashboard(request):
         .annotate(count=Count('id_response'))
         .order_by('response_date')
     )
-
-    # Formatear los datos para el gráfico
     data = {
         'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_data],
         'counts': [item['count'] for item in real_positive_data],
     }
 
+    # Consulta para la tabla de eventos registrados
+    events_list = detection.objects.all().order_by('-detection_date')
+    paginator = Paginator(events_list, 15)  # Cambia el 5 por el número de eventos que deseas por página
+    
+    page_number = request.GET.get('page')
+    events_page = paginator.get_page(page_number)
+
     context = {
         'data': data,
+        'pie_data': pie_data,
         'startDate': startDate,
         'endDate': endDate,
+        'start_date_pie_chart': start_date_pie_chart,
+        'events_page': events_page,
     }
+
     return render(request, 'appweb/dashboard/dashboard.html', context)
 
 @login_required
@@ -259,7 +286,7 @@ def predicRansomware(request):
         deviation_entropy = round(abs(entropy - 0.95) * 100, 2)  # 0.95 as average entropy threshold
         deviation_size = round(abs(size - 1024) / 100, 2) # 1024 as a threshold for block size
         deviation_LBA = round(abs(LBA - 600000), 2)  # LBA threshold
-        
+
         # Final prediction
         if typeRansomwareRF[0] == typeRansomwareXGB[0]:
             ransomwareType = typeRansomwareXGB[0]

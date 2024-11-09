@@ -1,0 +1,134 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-10-08 13:19-0500\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:15
+#: .\aplicacion_web_app\templates\appWeb\signup.html:16
+msgid "Aplicación de detección de ransomware"
+msgstr "Ransomware Detection Application"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:19
+#: .\aplicacion_web_app\templates\appWeb\signup.html:21
+msgid "Iniciar sesión"
+msgstr "Sign In"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:22
+msgid "Usuario"
+msgstr "Username"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:23
+msgid "Ingresa tu usuario"
+msgstr "Enter your username"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:24
+#: .\aplicacion_web_app\templates\appWeb\signup.html:29
+msgid "Contraseña"
+msgstr "Password"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:25
+msgid "Ingresa tu contraseña"
+msgstr "Enter your password"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:26
+msgid "Iniciar Sesión"
+msgstr "Log In"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:28
+msgid "No está registrado?"
+msgstr "Not registered?"
+
+#: .\aplicacion_web_app\templates\appWeb\login.html:28
+msgid "Regístrate"
+msgstr "Sign Up"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:20
+msgid "Regístrar"
+msgstr "Register"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:21
+msgid "¿Ya tiene una cuenta?"
+msgstr "Already have an account?"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:25
+msgid "Usuario Nuevo"
+msgstr "New Username"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:26
+msgid "Ingrese Nombre de usuario nuevo"
+msgstr "Enter new username"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:27
+msgid "Correo Electronico"
+msgstr "Email Address"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:28
+msgid "ejemplo@gmail.com"
+msgstr "examples@gmail.com"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:30
+msgid "Ingrese Contraseña nueva"
+msgstr "Enter new password"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:31
+msgid "Repetir Contraseña"
+msgstr "Repeat Password"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:32
+msgid "Repita la contraseña"
+msgstr "Repeat the password"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:33
+msgid "Registrarse"
+msgstr "Sign Up"
+
+#: .\aplicacion_web_app\templates\appWeb\signup.html:46
+msgid "OK"
+msgstr "OK"
+
+#: .\aplicacion_web_app\views.py:55
+msgid "Todos los campos son obligatorios"
+msgstr "All fields are required"
+
+#: .\aplicacion_web_app\views.py:58
+msgid "Las contraseñas no coinciden"
+msgstr "Passwords do not match"
+
+#: .\aplicacion_web_app\views.py:63
+msgid "El correo electrónico no es válido"
+msgstr "Invalid email address"
+
+#: .\aplicacion_web_app\views.py:67
+msgid "La contraseña debe tener al menos 8 caracteres"
+msgstr "Password must be at least 8 characters long"
+
+#: .\aplicacion_web_app\views.py:71
+msgid "El nombre de usuario o el correo electrónico ya están en uso"
+msgstr "The username or email is already in use"
+
+#: .\aplicacion_web_app\views.py:82
+msgid "Se registró correctamente"
+msgstr "Successfully registered"
+
+#: .\aplicacion_web_app\views.py:128
+msgid "Tienes que completar todos los campos."
+msgstr "You need to fill all the fields."
+
+#: .\aplicacion_web_app\views.py:139
+msgid "Por favor, ingresa valores válidos en todos los campos."
+msgstr "Please enter valid values in all fields."

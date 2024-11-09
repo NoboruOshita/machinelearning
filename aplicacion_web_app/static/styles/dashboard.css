@@ -7,6 +7,10 @@ h2, p, input{
   padding: 0;
 }
 
+form{
+    width: max-content;
+}
+
 input{
     width: 8.5rem;
     padding: 3px;
@@ -25,6 +29,15 @@ p{
     text-align: left;
     font-size: 16px;
     font-weight: 100;
+}
+
+strong{
+    font-weight: 200;
+}
+
+a{
+    color: #2D9CDB;
+    text-decoration: none;
 }
 
 button{
@@ -49,7 +62,8 @@ button:hover{
 .input__date{
     display: flex;
     justify-content: space-around;
-    gap: 11rem;
+    align-items: flex-end;
+    gap: 1rem;
 }
 
 .container__dashboard-main{
@@ -74,5 +88,95 @@ button:hover{
     display: flex;
     flex-direction: column;
     row-gap: 7px;
-    justify-content: space-around;
+    margin-left: 4rem ;
+}
+
+#pieChart{
+    margin-top: .5rem;
+}
+
+.container__dashboard__table {
+    margin: 20px 0;
+}
+
+.table-event h2 {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.table-event table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-event th, .table-event td {
+    padding: 12px 14px;
+}
+
+.table-event thead th {
+    background-color: #f4f4f4;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.table-event tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease;
+}
+
+.table-event tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+.table-event tbody tr:hover {
+    background-color: #f1f1ff;
+}
+
+.table-event tbody tr.selected {
+    background-color: #f0e5ff;
+}
+
+.table-event td {
+    font-size: 15px;
+    color: #555;
+}
+
+.table-event td span {
+    font-weight: bold;
+}
+
+.table-event .pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.table-event .pagination a {
+    color: #555;
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.table-event .pagination a:hover {
+    background-color: #f1f1ff;
+}
+
+.table-event .pagination span {
+    padding: 5px 10px;
+    font-weight: bold;
+    color: #666;
 }

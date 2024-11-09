@@ -43,28 +43,6 @@ class detection(models.Model):
         managed = False
         db_table = 'detection'
 
-class detector_rf(models.Model):
-    id_detector_rf=models.BigAutoField(primary_key=True)
-    id_detection=models.ForeignKey('detection', on_delete=models.CASCADE)
-    precision=models.FloatField(null=True, blank=True)
-    accuracy=models.FloatField(null=True, blank=True)
-    recall=models.FloatField(null=True, blank=True)
-    f1_score=models.FloatField(null=True, blank=True)
-    class Meta:
-        managed = False
-        db_table = 'detector_rf'
-
-class detector_xgboost(models.Model):
-    id_detector_xgb=models.BigAutoField(primary_key=True)
-    id_detection=models.ForeignKey('detection', on_delete=models.CASCADE)
-    precision=models.FloatField(null=True, blank=True)
-    accuracy=models.FloatField(null=True, blank=True)
-    recall=models.FloatField(null=True, blank=True)
-    f1_score=models.FloatField(null=True, blank=True)
-    class Meta:
-        managed = False
-        db_table = 'detector_xgboost'
-
 class response(models.Model):
     id_response=models.BigAutoField(primary_key=True)
     id_detection=models.ForeignKey('detection', on_delete=models.CASCADE)
