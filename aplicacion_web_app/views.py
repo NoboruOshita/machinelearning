@@ -12,7 +12,7 @@ from django.contrib import messages
 from . models import *
 from datetime import datetime
 from openpyxl.styles import Alignment, Font
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Case, When
 from django.utils.timezone import now, timedelta
 
 import joblib
@@ -144,8 +144,8 @@ def dashboard(request):
 
     # Consulta para la gráfica de anillo basada en la fecha de inicio especificada
     total_responses = response.objects.filter(response_date__gte=start_date_pie_chart).count()
-    maligna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="cuarentena").count()
-    benigna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ninguna").count()
+    maligna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Cuarentena").count()
+    benigna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ransomware no detectado").count()
 
     # Calcular el porcentaje para la gráfica de anillo
     maligna_percentage = (maligna_count / total_responses) * 100 if total_responses > 0 else 0
@@ -160,20 +160,21 @@ def dashboard(request):
         response.objects
         .filter(response_date__range=(startDate, endDate))
         .values('response_date')
-        .annotate(count=Count('id_response'))
+        .annotate(count=Count(Case(When(action="Cuarentena", then=1))))
         .order_by('response_date')
     )
     data = {
         'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_data],
         'counts': [item['count'] for item in real_positive_data],
     }
-
     # Consulta para la tabla de eventos registrados
     events_list = detection.objects.all().order_by('-detection_date')
-    paginator = Paginator(events_list, 15)  # Cambia el 5 por el número de eventos que deseas por página
-    
+    print('event', events_list)
+    paginator = Paginator(events_list, 15)
+
     page_number = request.GET.get('page')
     events_page = paginator.get_page(page_number)
+    print(f"Total Responses: {total_responses}, Maligna Count: {maligna_count}, Benigna Count: {benigna_count}")
 
     context = {
         'data': data,
@@ -383,7 +384,9 @@ def saveDataRansomware(id_user_id, id_blacklist_id, timestamp_s, timestamp_ms, l
 
 def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date):
     ransomware_detected = data_ransomware_instance is not None
-    if predictedFinal < 70: ransomwareType = None
+    if predictedFinal < 70:
+        ransomwareType = None
+        ransomware_detected = False
     date = datetime.strptime(date, '%m/%d/%Y').date()
     data = detection(
         id_data_ransomware=data_ransomware.objects.get(id_data_ransomware=data_ransomware_instance),

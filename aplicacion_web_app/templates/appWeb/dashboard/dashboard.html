@@ -33,7 +33,7 @@
         <div class="pie-chart">
             <h2>{% trans "Grafica de Ransomware Maligno y Benigno" %}</h2>
             <div class="input__date">
-                <form method="get">
+                <form method="GET" action="{% url 'dashboard' %}">
                     <div>
                         <p>{% trans "Periodo de tiempo" %}</p>
                         <input type="date" name="start_date_pie_chart" id="start_date_pie_chart" value="{{ start_date_pie_chart }}">
@@ -104,6 +104,7 @@
 
 <script>
     const data = {{ data|safe }};
+    console.log(data);
     
     const ctx = document.getElementById('flowChart').getContext('2d');
     const flowChart = new Chart(ctx, {
@@ -165,28 +166,38 @@
     });
 </script>
 
-<script>
-    // Datos para el gráfico de anillo
-    const pieData = {
-        labels: ['Porcentaje Maligna', 'Porcentaje Benigna'],
-        datasets: [{
-            data: [{{ pie_data.maligna  }}, {{ pie_data.benigna }}],
-            backgroundColor: ['#FF6384', '#36A2EB'],
-        }]
-    };
-
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    const pieChart = new Chart(pieCtx, {
-        type: 'doughnut',
-        data: pieData,
+<script>    
+    const piectx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(piectx, {
+        type: 'pie',
+        data: {
+            labels: ['Maligna', 'Benigna'],
+            datasets: [{
+                data: [{{pie_data.maligna}}, {{pie_data.benigna}}],
+                backgroundColor: ['#FF6384', '#36A2EB'],
+            }]
+        },
         options: {
-            responsive: false,
-            plugins: {
-                legend: {
-                    position: 'center',
-                },
+        responsive: false,
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(tooltipItem) {
+                        let label = tooltipItem.label || ''; // 'Maligna' o 'Benigna'
+                        let value = tooltipItem.raw || 0; // Valor numérico (ej. 50)
+                        
+                        // Retorna la etiqueta con el valor y el sufijo personalizado
+                        return `${value}% de ${label.toLowerCase()}`;
+                    }
+                }
+            },
+            legend: {
+                display: false,
+                position: 'top',
             }
         }
+    }
     });
+
 </script>
 {% endblock %}
