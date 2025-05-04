@@ -1,4 +1,5 @@
 from django.http import HttpResponse, JsonResponse
+import requests
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
@@ -14,7 +15,7 @@ from datetime import datetime
 from openpyxl.styles import Alignment, Font
 from django.db.models import Count, Q, Case, When
 from django.utils.timezone import now, timedelta
-
+from rest_framework import status
 import joblib
 import numpy as np
 import openpyxl
@@ -49,7 +50,7 @@ def loginUser(request):
         if user is not None:
             login(request, user)
             messages.success(request, "Inicio de sesión exitoso. ¡Bienvenido!")
-            return redirect('index')
+            return redirect('dashboard')
         else:
             messages.error(request, "Credenciales inválidas. Por favor, verifica tus credenciales e inténtalo nuevamente.")
             return redirect('login')
@@ -213,7 +214,7 @@ def predicRansomware(request):
         predictedFinal = 0
         date = datetime.today().date().strftime('%m/%d/%Y')
 
-        # Verificar la ip de BD
+        # Verificar la ip de BD (Blacklist of BD us)
         if IP != '' and blacklist.objects.filter(IP=IP).exists():
             blacklist_instance = blacklist.objects.get(IP=IP)
             ransomwareType = blacklist_instance.ransomware_type
@@ -236,7 +237,38 @@ def predicRansomware(request):
                 entropy_shannon=entropy
             )            
             return render(request,'appweb/detection/detection.html',context)
-             
+        
+        # Verificar la ip por servicio AbuseIPDB (Use service api)
+        if IP != '':
+            try:
+                url = "https://api.abuseipdb.com/api/v2/check"
+                api_key = "7d6cc00fe95af1204b90d1315549e4388461b01d377f1c58e8c219ee65595506a2baa0420bccdfc7"
+
+                information = {
+                    "ipAddress": str(IP),
+                    "maxAgeInDays": "90"
+                }
+
+                api = {
+                    "key": api_key,
+                    "Accept": "application/json"
+                }
+
+                response = requests.get(url, headers=api, params=information)
+                res = response.json()
+                probability = res['data']['abuseConfidenceScore']
+
+                context = {
+                    'ransomware_type': ' Malware',
+                    'probability': probability,
+                    'date': date,
+                    'motive': [_("El servicio AbuseIPDB reportó que es un malware")]
+                }
+                return render(request,'appweb/detection/detection.html',context)
+            except Exception as e:
+                print("Error", e)
+                return JsonResponse({'mensaje': 'Error interno del servidor'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
         # Verificar que todos los campos estén llenos
         if not (timestampS and timestampMS and LBA and size and entropy):
             context = {"error_message": _("Tienes que completar todos los campos.")}
@@ -486,6 +518,7 @@ def excelDetail(request):
         
     return response
 
+@login_required
 def getExcelflowChart(request):
     global selected_start, selected_end
 

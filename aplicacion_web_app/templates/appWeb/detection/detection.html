@@ -2,130 +2,152 @@
 {% load static %}
 {% block content %}
 {% load i18n %}
+
 <head>
     <link rel="stylesheet" href="{% static 'styles/detection.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-    <div class="content-detection">
-        <h1>{% trans "Detectar Ransomware" %}</h1>
-        <div class="form">
-            <form action="{% url 'predicRansomware' %}" method="POST">
-                <div class="box__inputs">
-                    <div class="box">
-                        <p>{% trans "Registro de Tiempo [s]" %} </p>
-                        <input type="text" name="Timestamp_s" id="Timestamp_s" maxlength="10" placeholder="{% trans 'Ingrese el Registro de Tiempo en segundo' %}" required>
-                    </div>
-                    <div class="box">
-                        <p>{% trans "Registro de Tiempo [ms]" %}</p>
-                        <input type="text" name="Timestamp_ms" id="Timestamp_ms" maxlength="9" placeholder="{% trans 'Ingrese el Registro de Tiempo en microsegundos' %}" required>
-                    </div>
-                    <div class="box">
-                        <p>{% trans "Dirección de bloque lógico" %}</p>
-                        <input type="text" name="LBA" id="LBA" maxlength="9" placeholder="{% trans 'Ingrese el LBA' %}" required>
-                    </div>
+<div class="content-detection">
+    <h1>{% trans "Detectar Ransomware" %}</h1>
+    <div class="form">
+        <form action="{% url 'predicRansomware' %}" method="POST">
+            <div class="box__inputs">
+                <div class="box">
+                    <p>{% trans "Registro de Tiempo [s]" %} </p>
+                    <input type="text" name="Timestamp_s" id="Timestamp_s" maxlength="10"
+                        placeholder="{% trans 'Ingrese el Registro de Tiempo en segundo' %}" required>
                 </div>
-
-                <div class="box__inputs">
-                    <div class="box">
-                        <p>{% trans "Tamaño del bloque" %}</p>
-                        <input type="text" name="Size" id="Size" maxlength="4" placeholder="{% trans 'Ingrese el tamaño del bloque' %}" required>
-                    </div>
-                    <div class="box">
-                        <p>{% trans "Entropía de Shannon" %}</p>
-                        <input type="text" name="Entropy" id="Entropy" maxlength="18" placeholder="{% trans 'Ingrese la Entropía de Shannon normalizada' %}" required>
-                    </div>
-                    <div class="box">
-                        <p>{% trans "IP (Opcional)" %}</p>
-                        <input type="text" name="IP" id="IP" placeholder="{% trans 'Ingrese la IP' %}">
-                    </div>
+                <div class="box">
+                    <p>{% trans "Registro de Tiempo [ms]" %}</p>
+                    <input type="text" name="Timestamp_ms" id="Timestamp_ms" maxlength="9"
+                        placeholder="{% trans 'Ingrese el Registro de Tiempo en microsegundos' %}" required>
                 </div>
-                <div class="submit">
-                    <button type="submit">{% trans "Examinar Datos" %}</button>
+                <div class="box">
+                    <p>{% trans "Dirección de bloque lógico" %}</p>
+                    <input type="text" name="LBA" id="LBA" maxlength="9" placeholder="{% trans 'Ingrese el LBA' %}"
+                        required>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="content-detection-response">
-        <div class="content-response-result">
-            {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
-            <h3>{% trans "Respuesta de Mitgación" %}</h3>
-            <p>{% trans "El proceso fue mitigado existosamente, por los siguientes motivos:" %}</p>
-            <ul>
-                {% for reason in motive %}
-                <p>- {{ reason }}</p>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </div>
-        <div class="content-detection-result">
-            {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
-            <h3>{% trans "Resultado de Detección" %}</h3>
-            <p>{% trans "El tipo de ransomware detectado:" %}<strong style="color: red;">{{ ransomware_type }} </strong></p>
-            <p>{% trans "Porcentaje de confiabilidad de un posibles ransomware" %}</p>
-            <h1>{{ probability }} %</h1>
-            <div class="info">
-                <p>{% trans "Fecha de detección:" %} {{ date }}</p>
-                <a href="details" id="verDetalles">{% trans "Ver detalles" %}</a>
             </div>
-            {% elif ransomware_type != None and probability != None %}
-            <p style="color: green;">{% trans "RANSOMWARE NO DETECTADO" %}</p>
-            {% endif %}
-        </div>
-    </div>
 
-    <div id="modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="modal-close">&times;</span>
-            <div class="modal-header">{% trans "Detalle del resultado" %}</div>
-            <div class="modal-body">
-                <p>{% trans "Se detallan las precisiones, características importantes y las desviaciones:" %}</p>
-                <h4>{% trans "PRECISIONES:" %}</h4>
-                <p>{% trans "- Random Forest:" %}<span id="predictedProbabilityRF"> {{ predictedProbabilityRF }}%</span>&nbsp;<i class="bi bi-question-circle" width="14px" data-toggle="tooltip" data-placement="top" title="{% trans 'Estimación de probabilidad de detección del modelo Random Forest' %}"></i></p>
-                <p>{% trans "- XGBoost:" %}<span id="predictedProbabilityXGB"> {{ predictedProbabilityXGB }}%</span>&nbsp;<i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'Estimación de probabilidad de detección del modelo Extreme Gradient Boosting' %}"></i></p>
-
-                <h4>{% trans "DESVIACIONES DE LAS CARACTERISTICAS:" %}</h4>
-                <p>{% trans "- Desviación de Entropía:" %} <span id="deviation_entropy">{{ deviation_entropy }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de entropía mide la diferencia en la distribución de la información.' %}"></i></p>
-                <p>{% trans "- Desviación de Tamaño:" %} <span id="deviation_size">{{ deviation_size }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de tamaño se refiere a la diferencia en el tamaño de los archivos.' %}"></i></p>
-                <p>{% trans "- Desviación de LBA:" %} <span id="deviation_LBA">{{ deviation_LBA }}%</span> <i class="bi bi-question-circle" data-toggle="tooltip" data-placement="top" title="{% trans 'La desviación de LBA mide la diferencia en la ubicación lógica de los bloques de datos.' %}"></i></p>
-                
+            <div class="box__inputs">
+                <div class="box">
+                    <p>{% trans "Tamaño del bloque" %}</p>
+                    <input type="text" name="Size" id="Size" maxlength="4"
+                        placeholder="{% trans 'Ingrese el tamaño del bloque' %}" required>
+                </div>
+                <div class="box">
+                    <p>{% trans "Entropía de Shannon" %}</p>
+                    <input type="text" name="Entropy" id="Entropy" maxlength="18"
+                        placeholder="{% trans 'Ingrese la Entropía de Shannon normalizada' %}" required>
+                </div>
+                <div class="box">
+                    <p>{% trans "IP (Opcional)" %}</p>
+                    <input type="text" name="IP" id="IP" placeholder="{% trans 'Ingrese la IP' %}">
+                </div>
             </div>
-            <div class="modal-footer">
-                <a href="{% url 'excelDetail' %}">{% trans "Descargar detalles" %}</a>
+            <div class="submit">
+                <button type="submit">{% trans "Examinar Datos" %}</button>
             </div>
-        </div>
+        </form>
     </div>
-    
+</div>
 
-    <script>
-        const modal = document.getElementById("modal")
-        const closeBtn = document.querySelector(".modal-close")
-
-        document.querySelector("a[href='details']").addEventListener("click", function(event) {
-            event.preventDefault()
-            modal.style.display = "flex"  // Muestra el modal
-        });
-
-        closeBtn.addEventListener("click", function() {
-            modal.style.display = "none"  // Oculta el modal
-        });
-
-        window.addEventListener("click", function(event) {
-            if (event.target === modal) {
-                modal.style.display = "none"
-            }
-        })
-    </script>
-
-    <script>
-        {% if error_message %}
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: '{{ error_message }}',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK'
-            });
+<div class="content-detection-response">
+    <div class="content-response-result">
+        {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
+        <h3>{% trans "Respuesta de Mitgación" %}</h3>
+        <p>{% trans "El proceso fue mitigado existosamente, por los siguientes motivos:" %}</p>
+        <ul>
+            {% for reason in motive %}
+            <p>- {{ reason }}</p>
+            {% endfor %}
+        </ul>
+        {% elif ransomware_type != None and probability != None %}
+        <p style="color: green;">{% trans "NO SE REQUIERE MITIGACIÓN" %}</p>
         {% endif %}
-    </script>
+    </div>
+    <div class="content-detection-result">
+        {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
+        <h3>{% trans "Resultado de Detección" %}</h3>
+        <p>{% trans "El tipo de ransomware detectado:" %}<strong style="color: red;">{{ ransomware_type }} </strong></p>
+        <p>{% trans "Porcentaje de confiabilidad de un posibles ransomware" %}</p>
+        <h1>{{ probability }} %</h1>
+        <div class="info">
+            <p>{% trans "Fecha de detección:" %} {{ date }}</p>
+            <a href="details" id="verDetalles">{% trans "Ver detalles" %}</a>
+        </div>
+        {% elif ransomware_type != None and probability != None %}
+        <p style="color: green;">{% trans "RANSOMWARE NO DETECTADO" %}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <div class="modal-header">{% trans "Detalle del resultado" %}</div>
+        <div class="modal-body">
+            <p>{% trans "Se detallan las precisiones, características importantes y las desviaciones:" %}</p>
+            <h4>{% trans "PRECISIONES:" %}</h4>
+            <p>{% trans "- Random Forest:" %}<span id="predictedProbabilityRF"> {{ predictedProbabilityRF }}%</span>&nbsp;<i class="bi bi-question-circle" width="14px" data-toggle="tooltip"
+                    data-placement="top"
+                    title="{% trans 'Estimación de probabilidad de detección del modelo Random Forest' %}"></i></p>
+            <p>{% trans "- XGBoost:" %}<span id="predictedProbabilityXGB"> {{ predictedProbabilityXGB }}%</span>&nbsp;<i
+                    class="bi bi-question-circle" data-toggle="tooltip" data-placement="top"
+                    title="{% trans 'Estimación de probabilidad de detección del modelo Extreme Gradient Boosting' %}"></i>
+            </p>
+
+            <h4>{% trans "DESVIACIONES DE LAS CARACTERISTICAS:" %}</h4>
+            <p>{% trans "- Desviación de Entropía:" %} <span id="deviation_entropy">{{ deviation_entropy }}%</span> <i
+                    class="bi bi-question-circle" data-toggle="tooltip" data-placement="top"
+                    title="{% trans 'La desviación de entropía mide la diferencia en la distribución de la información.' %}"></i>
+            </p>
+            <p>{% trans "- Desviación de Tamaño:" %} <span id="deviation_size">{{ deviation_size }}%</span> <i
+                    class="bi bi-question-circle" data-toggle="tooltip" data-placement="top"
+                    title="{% trans 'La desviación de tamaño se refiere a la diferencia en el tamaño de los archivos.' %}"></i>
+            </p>
+            <p>{% trans "- Desviación de LBA:" %} <span id="deviation_LBA">{{ deviation_LBA }}%</span> <i
+                    class="bi bi-question-circle" data-toggle="tooltip" data-placement="top"
+                    title="{% trans 'La desviación de LBA mide la diferencia en la ubicación lógica de los bloques de datos.' %}"></i>
+            </p>
+
+        </div>
+        <div class="modal-footer">
+            <a href="{% url 'excelDetail' %}">{% trans "Descargar detalles" %}</a>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const modal = document.getElementById("modal")
+    const closeBtn = document.querySelector(".modal-close")
+
+    document.querySelector("a[href='details']").addEventListener("click", function (event) {
+        event.preventDefault()
+        modal.style.display = "flex"  // Muestra el modal
+    });
+
+    closeBtn.addEventListener("click", function () {
+        modal.style.display = "none"  // Oculta el modal
+    });
+
+    window.addEventListener("click", function (event) {
+        if (event.target === modal) {
+            modal.style.display = "none"
+        }
+    })
+</script>
+
+<script>
+    {% if error_message %}
+    Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: '{{ error_message }}',
+        confirmButtonColor: '#3085d6',
+        confirmButtonText: 'OK'
+    });
+    {% endif %}
+</script>
 {% endblock %}
