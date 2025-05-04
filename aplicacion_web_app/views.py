@@ -1,10 +1,8 @@
 from django.http import HttpResponse, JsonResponse
-import requests
 from django.utils.translation import gettext as _
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
@@ -13,14 +11,18 @@ from django.contrib import messages
 from . models import *
 from datetime import datetime
 from openpyxl.styles import Alignment, Font
-from django.db.models import Count, Q, Case, When
+from django.db.models import Count, Case, When
 from django.utils.timezone import now, timedelta
 from rest_framework import status
+from dotenv import load_dotenv
+import os
+import requests
 import joblib
 import numpy as np
 import openpyxl
-import pandas as pd
-import json
+
+load_dotenv()
+
 # VARIABLES GLOBALS
 deviation_entropy = None
 deviation_size = None
@@ -29,6 +31,7 @@ predictedProbabilityRF = None
 predictedProbabilityXGB = None
 selected_start = None
 selected_end = None
+API_KEY = os.getenv('API_KEY')
 
 resultStorage = {
     'ransomware_type' : [],
@@ -242,7 +245,7 @@ def predicRansomware(request):
         if IP != '':
             try:
                 url = "https://api.abuseipdb.com/api/v2/check"
-                api_key = "7d6cc00fe95af1204b90d1315549e4388461b01d377f1c58e8c219ee65595506a2baa0420bccdfc7"
+                api_key = API_KEY
 
                 information = {
                     "ipAddress": str(IP),
@@ -257,14 +260,15 @@ def predicRansomware(request):
                 response = requests.get(url, headers=api, params=information)
                 res = response.json()
                 probability = res['data']['abuseConfidenceScore']
-
-                context = {
-                    'ransomware_type': ' Malware',
-                    'probability': probability,
-                    'date': date,
-                    'motive': [_("El servicio AbuseIPDB reportó que es un malware")]
-                }
-                return render(request,'appweb/detection/detection.html',context)
+                
+                if probability >= 70:
+                    context = {
+                        'ransomware_type': ' Ip maliciosa ransomware',
+                        'probability': probability,
+                        'date': date,
+                        'motive': [_("Ip maliciosa de ransomware detectada por AbuseIPDB")]
+                    }
+                    return render(request,'appweb/detection/detection.html',context)
             except Exception as e:
                 print("Error", e)
                 return JsonResponse({'mensaje': 'Error interno del servidor'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
