@@ -68,7 +68,7 @@
                             <td>{{ event.detection_date|date:"d/m/Y" }}</td>
                             <td>{{ event.ransomware_type|default:"-" }}</td>
                             <td>
-                                {% if event.ransomware_detected %}
+                                {% if event.ransomware_detected or "Malicioso por AbuseIPDB" in event.ransomware_type %}
                                     <span style="color: red;">{% trans "Malicioso" %}</span>
                                 {% else %}
                                     <span style="color: blue;">{% trans "No Malicioso" %}</span>

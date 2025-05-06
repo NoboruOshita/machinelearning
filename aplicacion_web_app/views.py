@@ -174,12 +174,11 @@ def dashboard(request):
     # Consulta para la tabla de eventos registrados
     events_list = detection.objects.all().order_by('-detection_date')
     print('event', events_list)
-    paginator = Paginator(events_list, 15)
+    paginator = Paginator(events_list, 12)
 
     page_number = request.GET.get('page')
     events_page = paginator.get_page(page_number)
     print(f"Total Responses: {total_responses}, Maligna Count: {maligna_count}, Benigna Count: {benigna_count}")
-
     context = {
         'data': data,
         'pie_data': pie_data,
@@ -268,6 +267,7 @@ def predicRansomware(request):
                         'date': date,
                         'motive': [_("Ip maliciosa de ransomware detectada por AbuseIPDB")]
                     }
+                    saveDetection(None, 'Malicioso por AbuseIPDB', probability, date)
                     return render(request,'appweb/detection/detection.html',context)
             except Exception as e:
                 print("Error", e)
@@ -424,8 +424,13 @@ def saveDetection(data_ransomware_instance, ransomwareType, predictedFinal, date
         ransomwareType = None
         ransomware_detected = False
     date = datetime.strptime(date, '%m/%d/%Y').date()
+
+    data_ransomware_obj = None
+    if data_ransomware_instance is not None:
+        data_ransomware_obj = data_ransomware.objects.get(id_data_ransomware=data_ransomware_instance)
+
     data = detection(
-        id_data_ransomware=data_ransomware.objects.get(id_data_ransomware=data_ransomware_instance),
+        id_data_ransomware=data_ransomware_obj,
         ransomware_detected=ransomware_detected,
         ransomware_type=ransomwareType,
         percentage_reliability=predictedFinal,
