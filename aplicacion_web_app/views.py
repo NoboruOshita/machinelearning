@@ -22,7 +22,7 @@ import numpy as np
 import openpyxl
 
 load_dotenv()
-
+TEST = "7d6cc00fe95af1204b90d1315549e4388461b01d377f1c58e8c219ee65595506a2baa0420bccdfc7"
 # VARIABLES GLOBALS
 deviation_entropy = None
 deviation_size = None
