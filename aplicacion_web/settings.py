@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-w5ad5!z4w=g8zbm_h^rq575xg8u3tkj@)5+jz6lzs)(g4(qlc5'
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG", cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config("ALLOWED_HOSTS").split(",")
 
 
 # Application definition
@@ -37,14 +39,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'aplicacion_web_app'
+    'aplicacion_web_app',
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
+'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'aplicacion_web_app.middleware.GeoIPMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -75,21 +79,29 @@ WSGI_APPLICATION = 'aplicacion_web.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # Local
-NAME_DB = "aplicacion"
-USER_DB = "postgres"
-PASSWORD_DB = "admin"
-HOST_DB = "localhost"
+# NAME_DB = "producción"
+# USER_DB = "postgres"
+# PASSWORD_DB = "admin"
+# HOST_DB = "localhost"
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': NAME_DB,
+#         'USER': USER_DB,
+#         'PASSWORD': PASSWORD_DB,
+#         'HOST': HOST_DB,
+#         'PORT': '5432', 
+#     }
+# }
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': NAME_DB,
-        'USER': USER_DB,
-        'PASSWORD': PASSWORD_DB,
-        'HOST': HOST_DB,
-        'PORT': '5432', 
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3pyth'
     }
 }
+DATABASES["default"] = dj_database_url.parse(config("DATABASES_URL"))
 
 
 # Password validation
@@ -101,6 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -114,14 +129,30 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
+LANGUAGES = [
+    ('en', 'English'),
+    ('es', 'Spanish'),
+    ('de', 'German'),
+    ('fr', 'French'),
+    ('ja', 'Japanese'),
+    ('zh-hans', 'Chinese (Simplified)'),
+    ('ko', 'Korean'),
+    ('pt', 'Portuguese'),
+    ('ar', 'Arabic'),
+    # Añade otros idiomas que necesites
+]
 USE_I18N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',  # Directorio donde estarán tus archivos de traducción
+]
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+GEOIP_PATH = BASE_DIR / 'geoip'  # Debe apuntar a la carpeta donde está tu mmdb
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

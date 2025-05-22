@@ -31,7 +31,7 @@
             <canvas id="flowChart" width="680" height="290" style="margin-top: .5rem"></canvas>
         </div>
         <div class="pie-chart">
-            <h2>{% trans "Grafica de Ransomware Maligno y Benigno" %}</h2>
+            <h2>{% trans "Gráfica de Ransomware Maligno y Benigno" %}</h2>
             <div class="input__date">
                 <form method="GET" action="{% url 'dashboard' %}">
                     <div>
@@ -166,14 +166,16 @@
     });
 </script>
 
-<script>    
+<script>
+    const pieValues = {{ pie_values|safe }};
+
     const piectx = document.getElementById('pieChart').getContext('2d');
     const pieChart = new Chart(piectx, {
         type: 'pie',
         data: {
             labels: ['Maligna', 'Benigna'],
             datasets: [{
-                data: [{{pie_data.maligna}}, {{pie_data.benigna}}],
+                data: pieValues,
                 backgroundColor: ['#FF6384', '#36A2EB'],
             }]
         },
@@ -198,6 +200,5 @@
         }
     }
     });
-
 </script>
 {% endblock %}

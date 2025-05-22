@@ -16,7 +16,7 @@ class GeoIPMiddleware(MiddlewareMixin):
 
         # Cambiar a una IP pública para pruebas locales
         if ip == '127.0.0.1':
-            ip = '1.0.32.0'  # Cambia esto según tus necesidades
+            ip = '104.106.95.255'  # Cambia esto según tus necesidades
         
         print(f"IP detectada: {ip}")  # Para depuración
 

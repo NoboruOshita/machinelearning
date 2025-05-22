@@ -20,8 +20,9 @@ import requests
 import joblib
 import numpy as np
 import openpyxl
-
-load_dotenv()
+import json
+#load_dotenv()
+from decouple import config
 
 # VARIABLES GLOBALS
 deviation_entropy = None
@@ -31,7 +32,8 @@ predictedProbabilityRF = None
 predictedProbabilityXGB = None
 selected_start = None
 selected_end = None
-API_KEY = os.getenv('API_KEY')
+#API_KEY = os.getenv('API_KEY')
+API_KEY = config("API_KEY")
 
 resultStorage = {
     'ransomware_type' : [],
@@ -158,7 +160,7 @@ def dashboard(request):
         'maligna': round(maligna_percentage, 2),
         'benigna': round(benigna_percentage, 2),
     }
-
+    pie_values = json.dumps([pie_data['maligna'], pie_data['benigna']])
     # Datos para las otras gráficas
     real_positive_data = (
         response.objects
@@ -182,6 +184,7 @@ def dashboard(request):
     context = {
         'data': data,
         'pie_data': pie_data,
+        'pie_values': pie_values,
         'startDate': startDate,
         'endDate': endDate,
         'start_date_pie_chart': start_date_pie_chart,
@@ -286,7 +289,7 @@ def predicRansomware(request):
             size = float(size)
             entropy = float(entropy)
         except ValueError:
-            context = {"error_message": _("Por favor, ingresa valores válidos en todos los campos.")}
+            context = {"error_message": _("Por favor, ingrese valores válidos en los campos")}
             return render(request, 'appweb/detection/detection.html', context)
 
         # Verify data with the ML Model
