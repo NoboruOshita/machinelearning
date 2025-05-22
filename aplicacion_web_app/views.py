@@ -59,7 +59,7 @@ def loginUser(request):
         else:
             messages.error(request, "Credenciales inválidas. Por favor, verifica tus credenciales e inténtalo nuevamente.")
             return redirect('login')
-    return render(request, 'appweb/login.html')
+    return render(request, 'appWeb/login.html')
 
 def logout_user(request):
     logout(request)
@@ -81,22 +81,22 @@ def sign_up(request):
         #VALIDATION
         if not all([usuario_nuevo, correo, pass_nuevo, pass_confirmacion]):
             context = {'error_message': _('Todos los campos son obligatorios')}
-            return render (request, 'appweb/signup.html', context)
+            return render (request, 'appWeb/signup.html', context)
         if pass_nuevo != pass_confirmacion:
             context = {'error_message': _('Las contraseñas no coinciden')}
-            return render (request, 'appweb/signup.html', context)
+            return render (request, 'appWeb/signup.html', context)
         try:
             validate_email(correo)
         except ValidationError:
             context = {'error_message': _('El correo electrónico no es válido')}
-            return render (request, 'appweb/signup.html', context)
+            return render (request, 'appWeb/signup.html', context)
         if len(pass_nuevo) < 8:
             context = {'error_message': _('La contraseña debe tener al menos 8 caracteres')}
             print(f"Mensaje de error a mostrar: '{context['error_message']}'")
-            return render(request, 'appweb/signup.html', context)
+            return render(request, 'appWeb/signup.html', context)
         if auth_user.objects.filter(username=usuario_nuevo).exists() or auth_user.objects.filter(email=correo).exists():
             context = {'error_message': _('El nombre de usuario o el correo electrónico ya están en uso')}
-            return render (request, 'appweb/signup.html', context)
+            return render (request, 'appWeb/signup.html', context)
         
        # SAVE IN DATABASE
         try:
@@ -111,15 +111,15 @@ def sign_up(request):
         except Exception as e:
             print('No se pudo registrar. Error: ', e)
             return JsonResponse({'Mensaje' : 'Error interno del servidor'}, status = 500)
-    return render(request, 'appweb/signup.html')
+    return render(request, 'appWeb/signup.html')
 
 @login_required
 def index(request):
-    return render(request, 'appweb/index.html')
+    return render(request, 'appWeb/index.html')
 
 @login_required
 def detections(request):
-    return render(request, 'appweb/detection/detection.html')
+    return render(request, 'appWeb/detection/detection.html')
 
 @login_required
 def dashboard(request):
@@ -191,7 +191,7 @@ def dashboard(request):
         'events_page': events_page,
     }
 
-    return render(request, 'appweb/dashboard/dashboard.html', context)
+    return render(request, 'appWeb/dashboard/dashboard.html', context)
 
 @login_required
 def predicRansomware(request):
@@ -241,7 +241,7 @@ def predicRansomware(request):
                 block_size=size, 
                 entropy_shannon=entropy
             )            
-            return render(request,'appweb/detection/detection.html',context)
+            return render(request,'appWeb/detection/detection.html',context)
         
         # Verificar la ip por servicio AbuseIPDB (Use service api)
         if IP != '':
@@ -271,7 +271,7 @@ def predicRansomware(request):
                         'motive': [_("Ip maliciosa de ransomware detectada por AbuseIPDB")]
                     }
                     saveDetection(None, 'Malicioso por AbuseIPDB', probability, date)
-                    return render(request,'appweb/detection/detection.html',context)
+                    return render(request,'appWeb/detection/detection.html',context)
             except Exception as e:
                 print("Error", e)
                 return JsonResponse({'mensaje': 'Error interno del servidor'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -279,7 +279,7 @@ def predicRansomware(request):
         # Verificar que todos los campos estén llenos
         if not (timestampS and timestampMS and LBA and size and entropy):
             context = {"error_message": _("Tienes que completar todos los campos.")}
-            return render(request, 'appweb/detection/detection.html', context)
+            return render(request, 'appWeb/detection/detection.html', context)
 
         try:
             # Convertir los campos a los tipos adecuados
@@ -290,7 +290,7 @@ def predicRansomware(request):
             entropy = float(entropy)
         except ValueError:
             context = {"error_message": _("Por favor, ingrese valores válidos en los campos")}
-            return render(request, 'appweb/detection/detection.html', context)
+            return render(request, 'appWeb/detection/detection.html', context)
 
         # Verify data with the ML Model
         inputData = np.array([[timestampS, timestampMS, LBA, size, entropy]])
@@ -377,7 +377,7 @@ def predicRansomware(request):
             'deviation_LBA': deviation_LBA
         }
 
-    return render(request, 'appweb/detection/detection.html', context)
+    return render(request, 'appWeb/detection/detection.html', context)
 
 def responseRansomware(predictedFinal, features):
     '''
