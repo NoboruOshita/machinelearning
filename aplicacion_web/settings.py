@@ -43,7 +43,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'aplicacion_web_app.middleware.GeoIPMiddleware',
@@ -158,6 +159,8 @@ GEOIP_PATH = BASE_DIR / 'geoip'  # Debe apuntar a la carpeta donde está tu mmdb
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'           # directorio de salida
+STATICFILES_DIRS = [ BASE_DIR / 'aplicacion_web_app' / 'static' ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
