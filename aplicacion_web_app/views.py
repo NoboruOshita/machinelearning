@@ -11,7 +11,7 @@ from django.contrib import messages
 from . models import *
 from datetime import datetime
 from openpyxl.styles import Alignment, Font
-from django.db.models import Count, Case, When
+from django.db.models import Count, Case, When, Q
 from django.utils.timezone import now, timedelta
 from rest_framework import status
 from dotenv import load_dotenv
@@ -123,14 +123,15 @@ def detections(request):
 
 @login_required
 def dashboard(request):
-    # Rango de fecha por defecto para las otras gráficas
+    # -------------------------
+    # Lógica de filtros para gráficas
+    # -------------------------
     endDate = now().date()
     startDate = endDate - timedelta(weeks=4)
-    
-    # Verificar si el usuario ha especificado fechas para las otras gráficas
+
+    # Parámetros GET para gráfica de línea
     selected_start = request.GET.get('startDate')
-    selected_end = request.GET.get('endDate')
-    
+    selected_end   = request.GET.get('endDate')
     if 'limpiar_filtro' in request.GET:
         startDate = endDate - timedelta(weeks=4)
     else:
@@ -141,28 +142,23 @@ def dashboard(request):
         if startDate > endDate:
             endDate = startDate
 
-    # Filtro para la gráfica de anillo (solo necesita una fecha de inicio)
+    # Parámetro GET para gráfica de pastel
     start_date_pie_chart = request.GET.get('start_date_pie_chart')
     if 'limpiar_filtro_pie_chart' in request.GET or not start_date_pie_chart:
-        start_date_pie_chart = endDate - timedelta(weeks=4)  # Valor por defecto
+        start_date_pie_chart = endDate - timedelta(weeks=4)
     else:
         start_date_pie_chart = datetime.strptime(start_date_pie_chart, '%Y-%m-%d').date()
 
-    # Consulta para la gráfica de anillo basada en la fecha de inicio especificada
+    # Datos pastel
     total_responses = response.objects.filter(response_date__gte=start_date_pie_chart).count()
-    maligna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Cuarentena").count()
-    benigna_count = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ransomware no detectado").count()
+    maligna_count   = response.objects.filter(response_date__gte=start_date_pie_chart, action="Cuarentena").count()
+    benigna_count   = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ransomware no detectado").count()
+    maligna_pct     = (maligna_count / total_responses) * 100 if total_responses else 0
+    benigna_pct     = (benigna_count / total_responses) * 100 if total_responses else 0
+    pie_values      = json.dumps([round(maligna_pct, 2), round(benigna_pct, 2)])
 
-    # Calcular el porcentaje para la gráfica de anillo
-    maligna_percentage = (maligna_count / total_responses) * 100 if total_responses > 0 else 0
-    benigna_percentage = (benigna_count / total_responses) * 100 if total_responses > 0 else 0
-    pie_data = {
-        'maligna': round(maligna_percentage, 2),
-        'benigna': round(benigna_percentage, 2),
-    }
-    pie_values = json.dumps([pie_data['maligna'], pie_data['benigna']])
-    # Datos para las otras gráficas
-    real_positive_data = (
+    # Datos línea
+    real_positive_qs = (
         response.objects
         .filter(response_date__range=(startDate, endDate))
         .values('response_date')
@@ -170,27 +166,60 @@ def dashboard(request):
         .order_by('response_date')
     )
     data = {
-        'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_data],
-        'counts': [item['count'] for item in real_positive_data],
+        'labels': [item['response_date'].strftime('%d/%m/%Y') for item in real_positive_qs],
+        'counts': [item['count'] for item in real_positive_qs],
     }
-    # Consulta para la tabla de eventos registrados
-    events_list = detection.objects.all().order_by('-detection_date')
-    print('event', events_list)
-    paginator = Paginator(events_list, 12)
 
+    # -------------------------
+    # Filtros para la tabla de eventos
+    # -------------------------
+    table_start   = request.GET.get('table_start')
+    table_end     = request.GET.get('table_end')
+    result_filter = request.GET.get('result_filter')  # 'malicioso' / 'no_malicioso' / None
+
+    events_qs = detection.objects.all()
+
+    # Filtrar por rango de fechas, solo si no es None ni cadena vacía
+    if table_start and table_start not in ('None', ''):
+        dt_start = datetime.strptime(table_start, '%Y-%m-%d').date()
+        events_qs = events_qs.filter(detection_date__gte=dt_start)
+    if table_end and table_end not in ('None', ''):
+        dt_end = datetime.strptime(table_end, '%Y-%m-%d').date()
+        events_qs = events_qs.filter(detection_date__lte=dt_end)
+
+    # Filtrar por resultado
+    if result_filter == 'malicioso':
+        events_qs = events_qs.filter(
+            Q(ransomware_detected=True) |
+            Q(ransomware_type__icontains="Malicioso")
+        )
+    elif result_filter == 'no_malicioso':
+        events_qs = events_qs.filter(
+            ransomware_detected=False
+        ).filter(
+            Q(ransomware_type__isnull=True) | Q(ransomware_type='') | Q(ransomware_type='-')
+        )
+
+    # Paginación y orden
+    events_qs   = events_qs.order_by('-detection_date')
+    paginator   = Paginator(events_qs, 12)
     page_number = request.GET.get('page')
     events_page = paginator.get_page(page_number)
-    print(f"Total Responses: {total_responses}, Maligna Count: {maligna_count}, Benigna Count: {benigna_count}")
+
+    # -------------------------
+    # Contexto y render
+    # -------------------------
     context = {
         'data': data,
-        'pie_data': pie_data,
         'pie_values': pie_values,
         'startDate': startDate,
         'endDate': endDate,
         'start_date_pie_chart': start_date_pie_chart,
+        'table_start': table_start,
+        'table_end': table_end,
+        'result_filter': result_filter,
         'events_page': events_page,
     }
-
     return render(request, 'appWeb/dashboard/dashboard.html', context)
 
 @login_required

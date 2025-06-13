@@ -2,6 +2,7 @@
 {% load static %}
 {% block content %}
 {% load i18n %}
+
 <head>
     <link rel="stylesheet" href="{% static 'styles/dashboard.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -9,25 +10,25 @@
 <div class="container__dashboard-main">
     <div class="container__dashboard__graph">
         <div class="flow-graph">
-                <h2>{% trans "Flujo de Reales Positivos" %}</h2>
-                <div class="input__date">
-                    <div>
-                        <form method="GET" action="{% url 'dashboard' %}">
-                            <div>
-                                <p>{% trans "Rango de periodo de tiempo" %}</p>
-                                <input type="date" name="startDate" id="dateFlowGraph" value="{{ startDate }}">
-                                <label>-</label>
-                                <input type="date" name="endDate" id="endDate" value="{{ endDate }}">
-                                <button type="submit" class="btn btn-primary">{% trans "Filtrar" %}</button>
-                                <button><a href="{% url 'dashboard' %}?limpiar_filtro" class="btn btn-secondary">{% trans "Limpiar filtro" %}</a></button>
-                            </div>
-                        </form>
-                    </div>
-                    <div>
-                        <button><a href="{% url 'getExcelflowChart' %}"><i class="bi bi-download">&nbsp;&nbsp;&nbsp;</i>{% trans "Descargar Reporte" %}</a></button>
-                    </div>
+            <h2>{% trans "Flujo de Reales Positivos" %}</h2>
+            <div class="input__date">
+                <div>
+                    <form method="GET" action="{% url 'dashboard' %}">
+                        <div>
+                            <p>{% trans "Rango de periodo de tiempo" %}</p>
+                            <input type="date" name="startDate" id="dateFlowGraph" value="{{ startDate }}">
+                            <label>-</label>
+                            <input type="date" name="endDate" id="endDate" value="{{ endDate }}">
+                            <button type="submit" class="btn btn-primary">{% trans "Filtrar" %}</button>
+                            <button><a href="{% url 'dashboard' %}?limpiar_filtro" class="btn btn-secondary">{% trans "Limpiar filtro" %}</a></button>
+                        </div>
+                    </form>
                 </div>
-                <!-- Gráfico de flujo -->
+                <div>
+                    <button><a href="{% url 'getExcelflowChart' %}"><i class="bi bi-download">&nbsp;&nbsp;&nbsp;</i>{%trans "Descargar Reporte" %}</a></button>
+                </div>
+            </div>
+            <!-- Gráfico de flujo -->
             <canvas id="flowChart" width="680" height="290" style="margin-top: .5rem"></canvas>
         </div>
         <div class="pie-chart">
@@ -36,7 +37,8 @@
                 <form method="GET" action="{% url 'dashboard' %}">
                     <div>
                         <p>{% trans "Periodo de tiempo" %}</p>
-                        <input type="date" name="start_date_pie_chart" id="start_date_pie_chart" value="{{ start_date_pie_chart }}">
+                        <input type="date" name="start_date_pie_chart" id="start_date_pie_chart"
+                            value="{{ start_date_pie_chart }}">
                         <button type="submit" class="btn btn-primary">{% trans "Filtrar" %}</button>
                         <button type="submit" name="limpiar_filtro_pie_chart" class="btn btn-secondary">{% trans "Limpiar filtro" %}</button>
                     </div>
@@ -48,11 +50,33 @@
                 </div>
             </div>
             <canvas id="pieChart" width="680" height="250"></canvas>
-        </div>           
+        </div>
     </div>
     <div class="container__dashboard__table">
         <div class="table-event">
             <h2>{% trans "Eventos registrados" %}</h2>
+            <div class="input__date table-filter">
+                <form method="get" action="{% url 'dashboard' %}">
+                    <div>
+                        <!-- Rango de fechas -->
+                        <label>{% trans "Desde" %}</label>
+                        <input type="date" name="table_start" value="{{ table_start }}">
+                        <label>{% trans "Hasta" %}</label>
+                        <input type="date" name="table_end" value="{{ table_end }}">
+
+                        <!-- Filtro de resultado -->
+                        <label>{% trans "Resultado" %}</label>
+                        <select name="result_filter">
+                            <option value="" {% if not result_filter %}selected{% endif %}>{% trans "Todos" %}</option>
+                            <option value="malicioso" {% if result_filter == "malicioso" %}selected{% endif %}>{% trans "Malicioso" %}</option>
+                            <option value="no_malicioso" {% if result_filter == "no_malicioso" %}selected{% endif %}>{% trans "No Malicioso" %}</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">{% trans "Filtrar" %}</button>
+                        <button><a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Limpiar filtro" %}</a></button>
+                    </div>
+                </form>
+            </div>
             <table>
                 <thead>
                     <tr>
@@ -64,38 +88,38 @@
                 </thead>
                 <tbody>
                     {% for event in events_page %}
-                        <tr>
-                            <td>{{ event.detection_date|date:"d/m/Y" }}</td>
-                            <td>{{ event.ransomware_type|default:"-" }}</td>
-                            <td>
-                                {% if event.ransomware_detected or "Malicioso por AbuseIPDB" in event.ransomware_type %}
-                                    <span style="color: red;">{% trans "Malicioso" %}</span>
-                                {% else %}
-                                    <span style="color: blue;">{% trans "No Malicioso" %}</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ event.percentage_reliability|default:"-" }}%</td>
-                        </tr>
+                    <tr>
+                        <td>{{ event.detection_date|date:"d/m/Y" }}</td>
+                        <td>{{ event.ransomware_type|default:"-" }}</td>
+                        <td>
+                            {% if event.ransomware_detected or "Malicioso por AbuseIPDB" in event.ransomware_type %}
+                            <span style="color: red;">{% trans "Malicioso" %}</span>
+                            {% else %}
+                            <span style="color: blue;">{% trans "No Malicioso" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ event.percentage_reliability|default:"-" }}%</td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="4">{% trans "No hay eventos registrados." %}</td>
-                        </tr>
+                    <tr>
+                        <td colspan="4">{% trans "No hay eventos registrados." %}</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
-    
+
             <!-- Controles de Paginación -->
             <div class="pagination">
                 {% if events_page.has_previous %}
-                    <a href="?page=1">&laquo; {% trans "Primero" %}</a>
-                    <a href="?page={{ events_page.previous_page_number }}">{% trans "Anterior" %}</a>
+                    <a href="?page=1&table_start={{ table_start }}&table_end={{ table_end }}&result_filter={{ result_filter }}">&laquo; {% trans "Primero" %}</a>
+                    <a href="?page={{ events_page.previous_page_number }}&table_start={{ table_start }}&table_end={{ table_end }}&result_filter={{ result_filter }}">{%trans "Anterior" %}</a>
                 {% endif %}
-                
-                <span>{% trans "Página" %} {{ events_page.number }} {% trans "de" %} {{ events_page.paginator.num_pages }}</span>
-                
+
+                <span>{% trans "Página" %} {{ events_page.number }} {% trans "de" %} {{ events_page.paginator.num_pages}}</span>
+
                 {% if events_page.has_next %}
-                    <a href="?page={{ events_page.next_page_number }}">{% trans "Siguiente" %}</a>
-                    <a href="?page={{ events_page.paginator.num_pages }}">{% trans "Último" %} &raquo;</a>
+                    <a href="?page={{ events_page.next_page_number }}&table_start={{ table_start }}&table_end={{ table_end }}&result_filter={{ result_filter }}">{% trans "Siguiente" %}</a>
+                    <a href="?page={{ events_page.paginator.num_pages }}&table_start={{ table_start }}&table_end={{ table_end }}&result_filter={{ result_filter }}">{% trans "Último" %} &raquo;</a>
                 {% endif %}
             </div>
         </div>
@@ -103,9 +127,9 @@
 </div>
 
 <script>
-    const data = {{ data|safe }};
+    const data = {{ data| safe }};
     console.log(data);
-    
+
     const ctx = document.getElementById('flowChart').getContext('2d');
     const flowChart = new Chart(ctx, {
         type: 'line',
@@ -150,10 +174,10 @@
                     padding: 10,
                     cornerRadius: 4,
                     callbacks: {
-                        title: function(tooltipItem) {
+                        title: function (tooltipItem) {
                             return 'Fecha: ' + tooltipItem[0].label;
                         },
-                        label: function(tooltipItem) {
+                        label: function (tooltipItem) {
                             return 'Real positivo: ' + tooltipItem.raw;
                         }
                     }
@@ -167,7 +191,7 @@
 </script>
 
 <script>
-    const pieValues = {{ pie_values|safe }};
+    const pieValues = {{ pie_values| safe }};
 
     const piectx = document.getElementById('pieChart').getContext('2d');
     const pieChart = new Chart(piectx, {
@@ -180,25 +204,25 @@
             }]
         },
         options: {
-        responsive: false,
-        plugins: {
-            tooltip: {
-                callbacks: {
-                    label: function(tooltipItem) {
-                        let label = tooltipItem.label || ''; // 'Maligna' o 'Benigna'
-                        let value = tooltipItem.raw || 0; // Valor numérico (ej. 50)
-                        
-                        // Retorna la etiqueta con el valor y el sufijo personalizado
-                        return `${value}% de ${label.toLowerCase()}`;
+            responsive: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            let label = tooltipItem.label || ''; // 'Maligna' o 'Benigna'
+                            let value = tooltipItem.raw || 0; // Valor numérico (ej. 50)
+
+                            // Retorna la etiqueta con el valor y el sufijo personalizado
+                            return `${value}% de ${label.toLowerCase()}`;
+                        }
                     }
+                },
+                legend: {
+                    display: false,
+                    position: 'top',
                 }
-            },
-            legend: {
-                display: false,
-                position: 'top',
             }
         }
-    }
     });
 </script>
 {% endblock %}
