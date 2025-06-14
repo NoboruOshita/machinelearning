@@ -235,15 +235,73 @@ def predicRansomware(request):
     id_user = request.user.id
     user_instance = auth_user.objects.get(id=id_user)
     id_blacklist_id = None
-    print(type(request.user))
-    print('user_instance', user_instance)
+
+    context = {
+        'Timestamp_s': '',
+        'Timestamp_ms': '',
+        'LBA': '',
+        'Size': '',
+        'Entropy': '',
+        'IP': ''
+    }
+
     if request.method == 'POST':
-        timestampS = request.POST.get('Timestamp_s')
-        timestampMS = request.POST.get('Timestamp_ms')
-        LBA = request.POST.get('LBA')
-        size = request.POST.get('Size')
-        entropy = request.POST.get('Entropy')
-        IP = request.POST.get('IP')
+        ts_raw  = request.POST.get('Timestamp_s', '').strip()
+        tms_raw = request.POST.get('Timestamp_ms', '').strip()
+        lba_raw = request.POST.get('LBA', '').strip()
+        sz_raw  = request.POST.get('Size', '').strip()
+        ent_raw = request.POST.get('Entropy', '').strip()
+        ip_raw  = request.POST.get('IP', '').strip()
+        
+        # volcamos al contexto para que se vuelvan a mostrar si hay error
+        context.update({
+            'Timestamp_s': ts_raw,
+            'Timestamp_ms': tms_raw,
+            'LBA': lba_raw,
+            'Size': sz_raw,
+            'Entropy': ent_raw,
+            'IP': ip_raw,
+        })
+        print(context)
+        # 1) Validar que los campos obligatorios no estén vacíos
+        if not (ts_raw and tms_raw and lba_raw and sz_raw and ent_raw):
+            context['error_message'] = _("Tienes que completar todos los campos.")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        # 2) Validar longitud exacta de timestamps
+        if len(ts_raw) < 10:
+            print(ts_raw)
+            context['error_message'] = _("El campo de Registro de Tiempo debe ser numérico y contener exactamente 10 dígitos (segundos)")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        if len(tms_raw) < 9:
+            context['error_message'] = _("El campo de Registro de Tiempo debe ser numérico y contener al menos 9 dígitos (milisegundos)")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        if len(lba_raw) < 7:
+            context['error_message'] = _("El campo Dirección de Bloqueo Lógico debe ser numérico y contener al menos 7 dígitos")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        if len(sz_raw) < 4:
+            context['error_message'] = _("El campo Tamaño del Bloqueo deber ser numérico y contener exactamente 4 dígitos")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        if len(ent_raw) < 16:
+            context['error_message'] = _("El campo Entropía de Shannon debe ser numérico decimal y contener al menos 16 dígitos")
+            return render(request, 'appWeb/detection/detection.html', context)
+
+        # 3) Intentar convertir a tipos numéricos
+        try:
+            timestampS  = int(ts_raw)
+            timestampMS = int(tms_raw)
+            LBA         = float(lba_raw)
+            size        = float(sz_raw)
+            entropy     = float(ent_raw)
+            IP          = ip_raw or ''
+        except ValueError:
+            context['error_message'] = _("Por favor, ingrese valores válidos en los campos.")
+            return render(request, 'appWeb/detection/detection.html', context)
+
         
         predictedFinal = 0
         date = datetime.today().date().strftime('%m/%d/%Y')
@@ -310,16 +368,16 @@ def predicRansomware(request):
             context = {"error_message": _("Tienes que completar todos los campos.")}
             return render(request, 'appWeb/detection/detection.html', context)
 
-        try:
-            # Convertir los campos a los tipos adecuados
-            timestampS = int(timestampS)
-            timestampMS = int(timestampMS)
-            LBA = float(LBA)
-            size = float(size)
-            entropy = float(entropy)
-        except ValueError:
-            context = {"error_message": _("Por favor, ingrese valores válidos en los campos")}
-            return render(request, 'appWeb/detection/detection.html', context)
+        # try:
+        #     # Convertir los campos a los tipos adecuados
+        #     timestampS = int(timestampS)
+        #     timestampMS = int(timestampMS)
+        #     LBA = float(LBA)
+        #     size = float(size)
+        #     entropy = float(entropy)
+        # except ValueError:
+        #     context = {"error_message": _("Por favor, ingrese valores válidos en los campos")}
+        #     return render(request, 'appWeb/detection/detection.html', context)
 
         # Verify data with the ML Model
         inputData = np.array([[timestampS, timestampMS, LBA, size, entropy]])
@@ -394,7 +452,7 @@ def predicRansomware(request):
         resultStorage['deviation_LBA'].append(deviation_LBA)
 
         if predictedFinal < 70: motive = _('Sin respuesta contra la amenaza')
-        context = {
+        context.update({
             'ransomware_type': ransomwareType,
             'probability': predictedFinal,
             'date': date,
@@ -404,7 +462,7 @@ def predicRansomware(request):
             'deviation_entropy': deviation_entropy,
             'deviation_size': deviation_size,
             'deviation_LBA': deviation_LBA
-        }
+        })
 
     return render(request, 'appWeb/detection/detection.html', context)
 

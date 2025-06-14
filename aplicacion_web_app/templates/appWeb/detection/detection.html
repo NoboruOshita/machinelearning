@@ -10,35 +10,45 @@
 <div class="content-detection">
     <h1>{% trans "Detectar Ransomware" %}</h1>
     <div class="form">
-        <form action="{% url 'predicRansomware' %}" method="POST">
+        <form  id="predictionForm" action="{% url 'predicRansomware' %}" method="POST">
             <div class="box__inputs">
                 <div class="box">
                     <p>{% trans "Registro de Tiempo [s]" %} </p>
-                    <input type="text" name="Timestamp_s" id="Timestamp_s" maxlength="10"
-                        placeholder="{% trans 'Ingrese el Registro de Tiempo en segundo' %}" required>
+                    <input type="text" name="Timestamp_s" id="Timestamp_s" maxlength="10" pattern=".{10}"
+                        title="{% trans 'El campo de Registro de Tiempo debe ser numérico y contener exactamente 10 dígitos (segundos)' %}" 
+                        placeholder="{% trans 'Ingrese el Registro de Tiempo en segundo' %}" 
+                        value="{{ Timestamp_s|default:'' }}" required>
                 </div>
                 <div class="box">
                     <p>{% trans "Registro de Tiempo [ms]" %}</p>
-                    <input type="text" name="Timestamp_ms" id="Timestamp_ms" maxlength="9"
-                        placeholder="{% trans 'Ingrese el Registro de Tiempo en microsegundos' %}" required>
+                    <input type="text" name="Timestamp_ms" id="Timestamp_ms" maxlength="10" pattern=".{9,10}"
+                        title="{% trans 'El campo de Registro de Tiempo debe ser numérico y contener al menos 9 dígitos (milisegundos)' %}" 
+                        placeholder="{% trans 'Ingrese el Registro de Tiempo en microsegundos' %}" 
+                        value="{{ Timestamp_ms|default:'' }}" required>
                 </div>
                 <div class="box">
-                    <p>{% trans "Dirección de bloque lógico" %}</p>
-                    <input type="text" name="LBA" id="LBA" maxlength="9" placeholder="{% trans 'Ingrese el LBA' %}"
-                        required>
+                    <p>{% trans "Dirección de Bloque Lógico" %}</p>
+                    <input type="text" name="LBA" id="LBA" maxlength="8" pattern=".{7.8}"
+                        title="{% trans 'El campo Dirección de Bloqueo Lógico debe ser numérico y contener al menos 7 dígitos' %}" 
+                        placeholder="{% trans 'Ingrese el LBA' %}"
+                        value="{{ LBA|default:'' }}" required>
                 </div>
             </div>
 
             <div class="box__inputs">
                 <div class="box">
-                    <p>{% trans "Tamaño del bloque" %}</p>
-                    <input type="text" name="Size" id="Size" maxlength="4"
-                        placeholder="{% trans 'Ingrese el tamaño del bloque' %}" required>
+                    <p>{% trans "Tamaño del Bloque" %}</p>
+                    <input type="text" name="Size" id="Size" maxlength="4" pattern=".{4}"
+                        title="{% trans 'El campo Tamaño del Bloqueo deber ser numérico y contener exactamente 4 dígitos' %}" 
+                        placeholder="{% trans 'Ingrese el tamaño del Bloque' %}" 
+                        value="{{ Size|default:'' }}" required>
                 </div>
                 <div class="box">
                     <p>{% trans "Entropía de Shannon" %}</p>
-                    <input type="text" name="Entropy" id="Entropy" maxlength="18"
-                        placeholder="{% trans 'Ingrese la Entropía de Shannon normalizada' %}" required>
+                    <input type="text" name="Entropy" id="Entropy" maxlength="18" attern=".{16.18}"
+                        title="{% trans 'El campo Entropía de Shannon debe ser numérico decimal y contener al menos 16 dígitos' %}"
+                        placeholder="{% trans 'Ingrese la Entropía de Shannon normalizada' %}" 
+                        value="{{ Entropy|default:'' }}" required>
                 </div>
                 <div class="box">
                     <p>{% trans "IP (Opcional)" %}</p>
@@ -46,7 +56,7 @@
                 </div>
             </div>
             <div class="submit">
-                <button type="submit">{% trans "Examinar Datos" %}</button>
+                <button type="submit" id="btnExaminar">{% trans "Examinar Datos" %}</button>
             </div>
         </form>
     </div>
@@ -55,7 +65,7 @@
 <div class="content-detection-response">
     <div class="content-response-result">
         {% if ransomware_type and probability >= 70 and ransomware_type != None and probability != None %}
-        <h3>{% trans "Respuesta de Mitgación" %}</h3>
+        <h3>{% trans "Respuesta de Mitigación" %}</h3>
         <p>{% trans "El proceso fue mitigado existosamente, por los siguientes motivos:" %}</p>
         <ul>
             {% for reason in motive %}
@@ -118,6 +128,32 @@
     </div>
 </div>
 
+<script>
+document.getElementById("predictionForm").addEventListener("submit", function () {
+  const fields = ["Timestamp_s", "Timestamp_ms", "LBA", "Size", "Entropy", "IP"];
+  fields.forEach(id => {
+    const input = document.getElementById(id);
+    input.readOnly = true;                    // readonly en vez de disabled
+    input.classList.add("input-disabled");
+  });
+
+  const btn = document.getElementById("btnExaminar");
+  btn.disabled = true;                       // el botón sí puede quedarse disabled
+  btn.innerText = "{% trans 'Procesando...' %}";
+  btn.classList.add("button-disabled");
+});
+</script>
+
+<script>
+    const form = document.querySelector("form[action='{% url 'predicRansomware' %}']");
+    const submitBtn = form.querySelector("button[type=submit]");
+
+    form.addEventListener('submit', () => {
+        // Desactiva el botón para evitar envíos repetidos
+        submitBtn.disabled = true;
+        submitBtn.textContent = '{% trans "Procesando..." %}';
+    });
+</script>
 
 <script>
     const modal = document.getElementById("modal")

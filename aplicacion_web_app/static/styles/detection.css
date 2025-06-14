@@ -100,6 +100,17 @@ button{
     background-color: #FFFFFF;
 }
 
+.input-disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+  color: #898585;
+}
+
+.button-disabled {
+  background-color: #e0e0e0 !important;
+  cursor: not-allowed !important;
+  color: #777 !important;
+}
 
 /****/
 /* Estilo para el modal */
