@@ -37,6 +37,7 @@ API_KEY = config("API_KEY")
 
 resultStorage = {
     'ransomware_type' : [],
+    'reliability_percentage': [],
     'predictedProbabilityRF': [],
     'predictedProbabilityXGB': [],
     'deviation_entropy': [],
@@ -445,6 +446,7 @@ def predicRansomware(request):
         ransomwareType = ransomwareType if predictedFinal > 70 else ""
         global resultStorage
         resultStorage['ransomware_type'].append(ransomwareType)
+        resultStorage['reliability_percentage'].append(predictedFinal)
         resultStorage['predictedProbabilityRF'].append(predictedProbabilityRF)
         resultStorage['predictedProbabilityXGB'].append(predictedProbabilityXGB)
         resultStorage['deviation_entropy'].append(deviation_entropy)
@@ -574,6 +576,7 @@ def excelDetail(request):
         _("Fecha"),
         _("Hora"),
         _("Ransomware"),
+        _("Porcentaje de confiabilidad"),
         _("Probabilidad de predicción de Random Forest"), 
         _("Probalidad de predicción de XGBoost"), 
         entityName['Deviation size'], 
@@ -591,6 +594,7 @@ def excelDetail(request):
         row = [ formatDate,
                formatHours,
                resultStorage['ransomware_type'][i],
+               resultStorage['reliability_percentage'][i],
                resultStorage['predictedProbabilityRF'][i], 
                resultStorage['predictedProbabilityXGB'][i],
                resultStorage['deviation_size'][i], 
