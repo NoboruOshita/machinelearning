@@ -127,6 +127,7 @@ def dashboard(request):
     # -------------------------
     # Lógica de filtros para gráficas
     # -------------------------
+    user = request.user
     endDate = now().date()
     startDate = endDate - timedelta(weeks=4)
 
@@ -150,10 +151,14 @@ def dashboard(request):
     else:
         start_date_pie_chart = datetime.strptime(start_date_pie_chart, '%Y-%m-%d').date()
 
+    base_responses = response.objects.filter(
+        id_detection__id_data_ransomware__id_user=user.id,
+        response_date__gte=start_date_pie_chart
+    )
     # Datos pastel
-    total_responses = response.objects.filter(response_date__gte=start_date_pie_chart).count()
-    maligna_count   = response.objects.filter(response_date__gte=start_date_pie_chart, action="Cuarentena").count()
-    benigna_count   = response.objects.filter(response_date__gte=start_date_pie_chart, action="Ransomware no detectado").count()
+    total_responses = base_responses.count()
+    maligna_count   = base_responses.filter(action="Cuarentena").count()
+    benigna_count   = base_responses.filter(action="Ransomware no detectado").count()
     maligna_pct     = (maligna_count / total_responses) * 100 if total_responses else 0
     benigna_pct     = (benigna_count / total_responses) * 100 if total_responses else 0
     pie_values      = json.dumps([round(maligna_pct, 2), round(benigna_pct, 2)])
@@ -161,7 +166,7 @@ def dashboard(request):
     # Datos línea
     real_positive_qs = (
         response.objects
-        .filter(response_date__range=(startDate, endDate))
+        .filter(id_detection__id_data_ransomware__id_user=user.id, response_date__range=(startDate, endDate))
         .values('response_date')
         .annotate(count=Count(Case(When(action="Cuarentena", then=1))))
         .order_by('response_date')
@@ -174,11 +179,13 @@ def dashboard(request):
     # -------------------------
     # Filtros para la tabla de eventos
     # -------------------------
+    events_qs = detection.objects.filter(
+        id_data_ransomware__id_user=user.id
+    )
+
     table_start   = request.GET.get('table_start')
     table_end     = request.GET.get('table_end')
     result_filter = request.GET.get('result_filter')  # 'malicioso' / 'no_malicioso' / None
-
-    events_qs = detection.objects.all()
 
     # Filtrar por rango de fechas, solo si no es None ni cadena vacía
     if table_start and table_start not in ('None', ''):
@@ -202,7 +209,7 @@ def dashboard(request):
         )
 
     # Paginación y orden
-    events_qs   = events_qs.order_by('-detection_date')
+    events_qs   = events_qs.select_related('id_data_ransomware').order_by('-detection_date')
     paginator   = Paginator(events_qs, 12)
     page_number = request.GET.get('page')
     events_page = paginator.get_page(page_number)
